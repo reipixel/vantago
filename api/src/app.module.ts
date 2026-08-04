@@ -19,35 +19,25 @@ import { Configuracao } from './configuracoes/configuracao.entity';
 import { Organizacao } from './organizacoes/organizacao.entity';
 import { Plano } from './planos/plano.entity';
 
-@Module({
-  imports: [
-    TypeOrmModule.forRoot({
-      type: 'mariadb',
-      host: 'localhost',
-      port: 3306,
-      username: 'root',
-      password: '',
-      database: 'liga_associados',
-      entities: [
-        Usuario, 
-        Atividade, 
-        Produto, 
-        Troca, 
-        Categoria, 
-        HistoricoPontos, 
-        Configuracao, 
-        Organizacao, 
-        Plano
-      ], 
-      synchronize: true, 
-    }),
-    UsuariosModule,
-    AtividadesModule,
-    CatalogoModule,
-    ConfiguracoesModule,
-    OrganizacoesModule,
-    PlanosModule,
-    LogsModule, 
-  ],
+TypeOrmModule.forRoot({
+  type: 'mariadb',
+  host: process.env.TYPEORM_HOST || 'localhost',
+  port: Number(process.env.TYPEORM_PORT) || 3306,
+  username: process.env.TYPEORM_USERNAME || 'root',
+  password: process.env.TYPEORM_PASSWORD || '',
+  database: process.env.TYPEORM_DATABASE || 'liga_associados',
+  entities: [
+    Usuario, 
+    Atividade, 
+    Produto, 
+    Troca, 
+    Categoria, 
+    HistoricoPontos, 
+    Configuracao, 
+    Organizacao, 
+    Plano
+  ], 
+  synchronize: true,
+  ssl: process.env.TYPEORM_HOST ? { rejectUnauthorized: false } : false, // Necessário para bancos na nuvem como Aiven
 })
 export class AppModule {}
