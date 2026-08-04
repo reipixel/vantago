@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 
 export default function GestaoAssociados() {
-  const [associados, setAssociados] = useState([])
+  const [associados, setAssociados] = useState<any[]>([])
   const [busca, setBusca] = useState('')
   const [loading, setLoading] = useState(true)
 
