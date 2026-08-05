@@ -2,13 +2,6 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 
-import { redirect } from 'next/navigation'
-
-export default function Home() {
-  // Redireciona o visitante da raiz direto para o Super Admin
-  redirect('/superadmin')
-}
-
 export default function Home() {
   const [usuarios, setUsuarios] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
