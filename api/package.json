@@ -1,7 +1,7 @@
 {
   "name": "api",
   "version": "0.0.1",
-  "description": "Vantago API Backend",
+  "description": "API NestJS Vantago",
   "author": "",
   "private": true,
   "license": "UNLICENSED",
