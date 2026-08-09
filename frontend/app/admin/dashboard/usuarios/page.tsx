@@ -22,7 +22,7 @@ export default function ListaUsuarios() {
 
     const url = slugDetectado
       ? `http://localhost:3000/usuarios?liga=${slugDetectado}`
-      : 'http://localhost:3000/usuarios'
+      : process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/usuarios'
 
     fetch(url)
       .then(res => res.json())

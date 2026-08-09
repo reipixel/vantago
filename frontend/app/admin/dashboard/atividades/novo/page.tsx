@@ -96,7 +96,7 @@ export default function FormAtividade() {
     try {
       let url = editId 
         ? `http://localhost:3000/atividades/${editId}` 
-        : 'http://localhost:3000/atividades'
+        : process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/atividades'
       
       // BLINDAGEM MULTI-TENANT: Anexa a liga à URL da chamada da API para o NestJS isolar o registro
       if (slugLiga) {

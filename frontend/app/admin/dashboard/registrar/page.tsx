@@ -17,8 +17,8 @@ export default function RegistrarPontos() {
   const fetchData = async () => {
     try {
       const [resAssoc, resAtiv] = await Promise.all([
-        fetch('http://localhost:3000/usuarios/associados'),
-        fetch('http://localhost:3000/atividades')
+        fetch(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/usuarios/associados'),
+        fetch(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/atividades')
       ])
       setAssociados(await resAssoc.json())
       setAtividades(await resAtiv.json())

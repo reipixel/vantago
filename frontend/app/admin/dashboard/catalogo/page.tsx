@@ -41,7 +41,7 @@ export default function ListagemCatalogo() {
         
       const urlCategorias = contextoLiga
         ? `http://localhost:3000/produtos/categorias?liga=${contextoLiga}`
-        : 'http://localhost:3000/produtos/categorias'
+        : process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/produtos/categorias'
 
       const [resItens, resCats] = await Promise.all([
         fetch(urlProdutos),

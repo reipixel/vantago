@@ -27,7 +27,7 @@ export default function NovoUsuario() {
     setEnviando(true);
     
     try {
-      let url = 'http://localhost:3000/usuarios'
+      let url = process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/usuarios'
       if (liga) url += `?liga=${liga}`
 
       const response = await fetch(url, {

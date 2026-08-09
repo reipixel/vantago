@@ -7,7 +7,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true)
 
   // Utiliza a variável do Render configurada na Vercel ou fallback local
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000'
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com'
 
   useEffect(() => {
     fetch(`${API_URL}/usuarios`)

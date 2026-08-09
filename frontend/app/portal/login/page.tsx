@@ -21,7 +21,7 @@ export default function LoginAssociado() {
     setLoading(true)
 
     try {
-      const res = await fetch('http://localhost:3000/usuarios/login-associado', {
+      const res = await fetch(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/usuarios/login-associado', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ identificador, senha })

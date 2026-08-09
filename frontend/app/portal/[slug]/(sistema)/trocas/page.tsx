@@ -94,7 +94,7 @@ export default function CatalogoTrocas() {
         produtoId: item.id
       }
 
-      const res = await fetch('http://localhost:3000/produtos/resgatar', {
+      const res = await fetch(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/produtos/resgatar', {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',

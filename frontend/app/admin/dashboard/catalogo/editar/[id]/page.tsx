@@ -47,7 +47,7 @@ export default function EditarItem({ params }: { params: Promise<{ id: string }>
     // Ajusta a rota para carregar as categorias no contexto da liga atual
     const urlCategorias = slug
       ? `http://localhost:3000/produtos/categorias?liga=${slug}`
-      : 'http://localhost:3000/produtos/categorias'
+      : process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/produtos/categorias'
 
     // Ajusta a rota para trazer apenas os produtos da liga correta e achar o ID correspondente
     const urlProdutos = slug

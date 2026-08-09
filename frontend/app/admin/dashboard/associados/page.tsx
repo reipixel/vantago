@@ -46,7 +46,7 @@ export default function GestaoAssociados() {
       const liga = obterSlugLigaContexto()
       const url = liga 
         ? `http://localhost:3000/usuarios?liga=${liga}` 
-        : 'http://localhost:3000/usuarios'
+        : process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/usuarios'
 
       const res = await fetch(url)
       const data = await res.json()
@@ -80,7 +80,7 @@ export default function GestaoAssociados() {
 
     setSaving(true)
     const liga = obterSlugLigaContexto()
-    let url = userForm.id ? `http://localhost:3000/usuarios/${userForm.id}` : 'http://localhost:3000/usuarios'
+    let url = userForm.id ? `http://localhost:3000/usuarios/${userForm.id}` : process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/usuarios'
     if (liga) {
       url += url.includes('?') ? `&liga=${liga}` : `?liga=${liga}`
     }

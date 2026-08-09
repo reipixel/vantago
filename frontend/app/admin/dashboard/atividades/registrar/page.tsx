@@ -11,8 +11,8 @@ export default function RegistrarPontos() {
 
   useEffect(() => {
     Promise.all([
-      fetch('http://localhost:3000/usuarios').then(res => res.json()),
-      fetch('http://localhost:3000/atividades').then(res => res.json())
+      fetch(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/usuarios').then(res => res.json()),
+      fetch(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/atividades').then(res => res.json())
     ]).then(([userData, ativData]) => {
       setUsuarios(userData)
       setAtividades(ativData.filter((a: any) => a.status === 'ativa'))
@@ -37,7 +37,7 @@ export default function RegistrarPontos() {
     
     setLoading(true)
     try {
-      const res = await fetch('http://localhost:3000/atividades/registrar-multiplo', {
+      const res = await fetch(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/atividades/registrar-multiplo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ atividadeId, usuariosIds: selecionados }),

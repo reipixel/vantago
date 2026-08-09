@@ -39,9 +39,9 @@ export default function SuperAdminDashboard() {
     try {
       // Chamada paralela para otimizar tempo de carregamento
       const [resOrg, resUsers, resLogs] = await Promise.all([
-        fetch('http://localhost:3000/organizacoes'),
-        fetch('http://localhost:3000/usuarios'),
-        fetch('http://localhost:3000/logs')
+        fetch(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/organizacoes'),
+        fetch(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/usuarios'),
+        fetch(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/logs')
       ])
 
       const orgs = resOrg.ok ? await resOrg.json() : []

@@ -26,7 +26,7 @@ function DashboardConteudo() {
     setLoading(true)
     try {
       // Ajustado para localhost para manter consistência de cabeçalhos de CORS com o main.ts do backend
-      const API_URL = 'http://localhost:3000';
+      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com';
       
       const fetchDados = async (url: string) => {
         try {

@@ -14,7 +14,7 @@ export default function ListaAtividadesPortal() {
     // Constrói a URL passando a liga como parâmetro e nos cabeçalhos multi-tenant
     const url = slug 
       ? `http://localhost:3000/atividades?liga=${slug}` 
-      : 'http://localhost:3000/atividades'
+      : process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/atividades'
 
     fetch(url, {
       headers: {

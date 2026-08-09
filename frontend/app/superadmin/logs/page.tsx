@@ -26,7 +26,7 @@ export default function LogsSistema() {
   const carregarLogs = async () => {
     setLoading(true)
     try {
-      const res = await fetch('http://localhost:3000/logs')
+      const res = await fetch(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/logs')
       if (res.ok) {
         const data = await res.json()
         setLogs(Array.isArray(data) ? data : [])

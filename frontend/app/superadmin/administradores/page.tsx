@@ -33,7 +33,7 @@ export default function GestaoSuperAdmins() {
   const carregarAdmins = async () => {
     setLoading(true)
     try {
-      const res = await fetch('http://localhost:3000/usuarios/admins', {
+      const res = await fetch(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/usuarios/admins', {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -78,7 +78,7 @@ export default function GestaoSuperAdmins() {
       const isEdicao = !!adminEdicao
       const url = isEdicao
         ? `http://localhost:3000/usuarios/${adminEdicao.id}`
-        : 'http://localhost:3000/usuarios'
+        : process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/usuarios'
 
       const method = isEdicao ? 'PATCH' : 'POST'
 

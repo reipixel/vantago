@@ -67,8 +67,8 @@ function ConfiguracoesConteudo() {
   const carregarDadosBase = async () => {
     try {
       const [resProd, resCat] = await Promise.all([
-        fetch(formatarUrl('http://localhost:3000/produtos'), { headers: obterHeaders() }),
-        fetch(formatarUrl('http://localhost:3000/produtos/categorias'), { headers: obterHeaders() })
+        fetch(formatarUrl(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/produtos'), { headers: obterHeaders() }),
+        fetch(formatarUrl(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/produtos/categorias'), { headers: obterHeaders() })
       ])
       setProdutosCatalogo(await resProd.json())
       setCategorias(await resCat.json())
@@ -78,7 +78,7 @@ function ConfiguracoesConteudo() {
   const carregarIdentidade = async () => {
     setLoading(true)
     try {
-      const res = await fetch(formatarUrl('http://localhost:3000/configuracoes/1'), {
+      const res = await fetch(formatarUrl(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/configuracoes/1'), {
         headers: obterHeaders()
       })
       if (res.ok) {
@@ -109,7 +109,7 @@ function ConfiguracoesConteudo() {
 
   const carregarAdmins = async () => {
     try {
-      const res = await fetch(formatarUrl('http://localhost:3000/usuarios/admins'), {
+      const res = await fetch(formatarUrl(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/usuarios/admins'), {
         headers: obterHeaders()
       })
       const data = await res.json()
@@ -121,7 +121,7 @@ function ConfiguracoesConteudo() {
     e.preventDefault()
     setSaving(true)
     try {
-      const res = await fetch(formatarUrl('http://localhost:3000/configuracoes/1'), {
+      const res = await fetch(formatarUrl(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/configuracoes/1'), {
         method: 'PATCH',
         headers: obterHeaders(),
         body: JSON.stringify(dados)
@@ -134,7 +134,7 @@ function ConfiguracoesConteudo() {
     e.preventDefault()
     setSaving(true)
     try {
-      const urlBase = userForm.id ? `http://localhost:3000/usuarios/${userForm.id}` : 'http://localhost:3000/usuarios'
+      const urlBase = userForm.id ? `http://localhost:3000/usuarios/${userForm.id}` : process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/usuarios'
       
       const payload: any = { ...userForm }
       if (userForm.id && !userForm.senha.trim()) {

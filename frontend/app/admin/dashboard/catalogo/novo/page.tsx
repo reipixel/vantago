@@ -45,7 +45,7 @@ export default function NovoItem() {
 
     const urlCategorias = slug
       ? `http://localhost:3000/produtos/categorias?liga=${slug}`
-      : 'http://localhost:3000/produtos/categorias'
+      : process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/produtos/categorias'
 
     fetch(urlCategorias)
       .then(res => res.json())
@@ -82,7 +82,7 @@ export default function NovoItem() {
 
     try {
       // Injeta explicitamente o slug da liga na query para o backend saber qual organizacaoId aplicar
-      let url = 'http://localhost:3000/produtos'
+      let url = process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/produtos'
       if (liga) url += `?liga=${liga}`
 
       const res = await fetch(url, {

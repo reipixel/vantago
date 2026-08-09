@@ -20,7 +20,7 @@ function DashboardLayoutConteudo({ children }: { children: React.ReactNode }) {
       let url = typeof input === 'string' ? input : input instanceof URL ? input.href : (input as Request).url;
       
       // Se a requisição for para o seu backend local e ainda não tiver o parâmetro da liga
-      if (url.includes('http://localhost:3000') || url.includes('http://127.0.0.1:3000')) {
+      if (url.includes(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com') || url.includes('http://127.0.0.1:3000')) {
         if (!url.includes('liga=')) {
           url += url.includes('?') ? `&liga=${slugLiga}` : `?liga=${slugLiga}`;
         }
@@ -71,7 +71,7 @@ function DashboardLayoutConteudo({ children }: { children: React.ReactNode }) {
 
   const buscarTrocasPendentes = async () => {
     try {
-      const res = await fetch('http://localhost:3000/produtos/admin/pedidos')
+      const res = await fetch(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/produtos/admin/pedidos')
       if (res.ok) {
         const data = await res.json()
         if (Array.isArray(data)) {

@@ -24,7 +24,7 @@ export default function GerenciarCategorias() {
     const contextoLiga = slugLiga !== undefined ? slugLiga : obterSlugLigaContexto()
     const url = contextoLiga
       ? `http://localhost:3000/produtos/categorias?liga=${contextoLiga}`
-      : 'http://localhost:3000/produtos/categorias'
+      : process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/produtos/categorias'
 
     fetch(url)
       .then(res => res.json())
@@ -44,7 +44,7 @@ export default function GerenciarCategorias() {
     if (!novaCategoria.trim()) return
     setLoading(true)
     
-    let url = 'http://localhost:3000/produtos/categorias'
+    let url = process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/produtos/categorias'
     if (liga) url += `?liga=${liga}`
 
     await fetch(url, {

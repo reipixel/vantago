@@ -26,8 +26,8 @@ export default function GestaoEntidades() {
     setLoading(true)
     try {
       const [resOrg, resPla] = await Promise.all([
-        fetch('http://localhost:3000/organizacoes'),
-        fetch('http://localhost:3000/planos')
+        fetch(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/organizacoes'),
+        fetch(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/planos')
       ])
       const orgs = await resOrg.json()
       const plas = await resPla.json()
@@ -54,7 +54,7 @@ export default function GestaoEntidades() {
     }
 
     const method = form.id ? 'PATCH' : 'POST'
-    const url = form.id ? `http://localhost:3000/organizacoes/${form.id}` : 'http://localhost:3000/organizacoes'
+    const url = form.id ? `http://localhost:3000/organizacoes/${form.id}` : process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/organizacoes'
 
     try {
       const res = await fetch(url, {

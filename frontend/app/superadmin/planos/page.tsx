@@ -10,7 +10,7 @@ export default function GestaoPlanos() {
   const carregarPlanos = async () => {
     setLoading(true)
     try {
-      const res = await fetch('http://localhost:3000/planos')
+      const res = await fetch(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/planos')
       const data = await res.json()
       setPlanos(Array.isArray(data) ? data : [])
     } catch (err) { console.error(err) }
@@ -22,7 +22,7 @@ export default function GestaoPlanos() {
   const handleSalvar = async (e: React.FormEvent) => {
     e.preventDefault()
     const method = form.id ? 'PATCH' : 'POST'
-    const url = form.id ? `http://localhost:3000/planos/${form.id}` : 'http://localhost:3000/planos'
+    const url = form.id ? `http://localhost:3000/planos/${form.id}` : process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/planos'
 
     const res = await fetch(url, {
       method,

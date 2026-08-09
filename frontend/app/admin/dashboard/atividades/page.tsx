@@ -29,7 +29,7 @@ export default function ListaAtividades() {
       // BLINDAGEM DO F5: Envia explicitamente o contexto da liga para o filtro no NestJS
       const url = liga 
         ? `http://localhost:3000/atividades?liga=${liga}` 
-        : 'http://localhost:3000/atividades'
+        : process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/atividades'
 
       const res = await fetch(url)
       const data = await res.json()
