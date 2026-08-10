@@ -1,7 +1,8 @@
 'use client'
 import { useState, useEffect } from 'react'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com'
+// Fallback configurado para a API oficial ativa no Render
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://vantago-api.onrender.com'
 
 export default function GestaoPlanos() {
   const [planos, setPlanos] = useState([])
@@ -13,8 +14,10 @@ export default function GestaoPlanos() {
     setLoading(true)
     try {
       const res = await fetch(`${API_URL}/planos`)
-      const data = await res.json()
-      setPlanos(Array.isArray(data) ? data : [])
+      if (res.ok) {
+        const data = await res.json()
+        setPlanos(Array.isArray(data) ? data : [])
+      }
     } catch (err) { 
       console.error('Erro ao carregar planos:', err) 
     } finally { 
