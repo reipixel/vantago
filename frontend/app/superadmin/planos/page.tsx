@@ -1,8 +1,9 @@
 'use client'
 import { useState, useEffect } from 'react'
 
-// Fallback configurado para a API oficial ativa no Render
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://vantago-api.onrender.com'
+// Garante que a URL base da API tenha o protocolo https:// obrigatorio
+const rawApiUrl = process.env.NEXT_PUBLIC_API_URL || 'https://vantago-api.onrender.com'
+const API_URL = rawApiUrl.startsWith('http') ? rawApiUrl : `https://${rawApiUrl}`
 
 export default function GestaoPlanos() {
   const [planos, setPlanos] = useState([])
@@ -124,7 +125,6 @@ export default function GestaoPlanos() {
         </table>
       </div>
 
-      {/* MODAL */}
       {showModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
           <form onSubmit={handleSalvar} className="bg-slate-900 border border-slate-800 w-full max-w-md p-10 rounded-[40px] space-y-6">
