@@ -1,6 +1,8 @@
 'use client'
 import { useState, useEffect } from 'react'
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com'
+
 export default function GestaoPlanos() {
   const [planos, setPlanos] = useState([])
   const [loading, setLoading] = useState(true)
@@ -10,11 +12,14 @@ export default function GestaoPlanos() {
   const carregarPlanos = async () => {
     setLoading(true)
     try {
-      const res = await fetch(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/planos')
+      const res = await fetch(`${API_URL}/planos`)
       const data = await res.json()
       setPlanos(Array.isArray(data) ? data : [])
-    } catch (err) { console.error(err) }
-    finally { setLoading(false) }
+    } catch (err) { 
+      console.error('Erro ao carregar planos:', err) 
+    } finally { 
+      setLoading(false) 
+    }
   }
 
   useEffect(() => { carregarPlanos() }, [])
@@ -22,24 +27,34 @@ export default function GestaoPlanos() {
   const handleSalvar = async (e: React.FormEvent) => {
     e.preventDefault()
     const method = form.id ? 'PATCH' : 'POST'
-    const url = form.id ? `http://localhost:3000/planos/${form.id}` : process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/planos'
+    const url = form.id ? `${API_URL}/planos/${form.id}` : `${API_URL}/planos`
 
-    const res = await fetch(url, {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(form)
-    })
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form)
+      })
 
-    if (res.ok) {
-      setShowModal(false)
-      carregarPlanos()
+      if (res.ok) {
+        setShowModal(false)
+        carregarPlanos()
+      } else {
+        console.error('Erro na resposta da API ao salvar plano:', res.status)
+      }
+    } catch (err) {
+      console.error('Erro ao conectar com a API:', err)
     }
   }
 
   const handleDeletar = async (id: number) => {
     if (confirm("Excluir este plano?")) {
-      await fetch(`http://localhost:3000/planos/${id}`, { method: 'DELETE' })
-      carregarPlanos()
+      try {
+        const res = await fetch(`${API_URL}/planos/${id}`, { method: 'DELETE' })
+        if (res.ok) carregarPlanos()
+      } catch (err) {
+        console.error('Erro ao excluir plano:', err)
+      }
     }
   }
 
@@ -106,7 +121,7 @@ export default function GestaoPlanos() {
         </table>
       </div>
 
-      {/* MODAL (Com campo Descrição) */}
+      {/* MODAL */}
       {showModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md">
           <form onSubmit={handleSalvar} className="bg-slate-900 border border-slate-800 w-full max-w-md p-10 rounded-[40px] space-y-6">
