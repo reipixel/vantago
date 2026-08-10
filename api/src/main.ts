@@ -4,15 +4,18 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Habilita CORS para permitir que o front-end acesse a API
+  // Habilita CORS completo para aceitar requisições do Front-end
   app.enableCors({
-    origin: '*', // Permite requisicoes do dominio do front-end
+    origin: true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: true,
   });
 
+  // A Hostinger injeta a porta em process.env.PORT. Se nao houver, usa 3000.
   const port = process.env.PORT || 3000;
-  await app.listen(port);
-  console.log(`API rodando na porta ${port}`);
+  
+  // Escutar em '0.0.0.0' eh obrigatorio para servidores web/proxy reverso
+  await app.listen(port, '0.0.0.0');
+  console.log(`API Vantago ativa e escutando na porta ${port}`);
 }
 bootstrap();

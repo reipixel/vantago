@@ -63,9 +63,10 @@ import { Plano } from './planos/plano.entity';
           Organizacao,
           Plano,
         ],
-        synchronize: true, // Cria as tabelas automaticamente no MySQL da Hostinger
+        synchronize: true, // Cria e atualiza as tabelas no MySQL automaticamente
         retryAttempts: 10,  // Tenta reconectar 10 vezes para evitar crash no startup
         retryDelay: 3000,   // Aguarda 3s entre tentativas
+        ssl: false,         // Desativa exigencia de SSL para conexoes locais 127.0.0.1 na Hostinger
       }),
     }),
     UsuariosModule,
