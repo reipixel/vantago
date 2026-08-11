@@ -2,6 +2,21 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 
+// Sanitizador de URL para garantir que a requisição vá direto para a API no Render
+const getCleanApiUrl = () => {
+  let url = process.env.NEXT_PUBLIC_API_URL || 'https://vantago-api.onrender.com'
+  url = url.replace(/[\[\]\(\)\s]/g, '')
+  if (url.startsWith('https:/') && !url.startsWith('https://')) {
+    url = url.replace('https:/', 'https://')
+  }
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    url = `https://${url}`
+  }
+  return url.replace(/\/+$/, '')
+}
+
+const API_URL = getCleanApiUrl()
+
 interface Metrics {
   totalOrganizacoes: number
   totalAssociados: number
@@ -37,11 +52,11 @@ export default function SuperAdminDashboard() {
   const carregarDadosDashboard = async () => {
     setLoading(true)
     try {
-      // Chamada paralela para otimizar tempo de carregamento
+      // Chamadas paralelas apontando diretamente para os endpoints corretos da API
       const [resOrg, resUsers, resLogs] = await Promise.all([
-        fetch(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/organizacoes'),
-        fetch(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/usuarios'),
-        fetch(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/logs')
+        fetch(`${API_URL}/organizacoes`),
+        fetch(`${API_URL}/usuarios`),
+        fetch(`${API_URL}/logs`)
       ])
 
       const orgs = resOrg.ok ? await resOrg.json() : []
