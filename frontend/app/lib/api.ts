@@ -1,21 +1,24 @@
-// Define a URL base da API a partir de variável de ambiente ou fallback de produção da Hostinger
-export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com';
+// Função que limpa e valida a URL base da API
+export function getApiBaseUrl(): string {
+  let url = process.env.NEXT_PUBLIC_API_URL || 'https://vantago-api.onrender.com';
 
-/**
- * Utilitário para formatar URLs trocando process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com' pela URL de produção
- */
-export function getApiUrl(endpoint: string): string {
-  if (!endpoint) return API_URL;
-  
-  // Se for uma URL absoluta apontando para localhost, substitui pela URL da API na Hostinger
-  if (endpoint.startsWith(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com') || endpoint.startsWith('http://127.0.0.1:3000')) {
-    return endpoint.replace(/^http:\/\/(localhost|127\.0\.0\.1):3000/, API_URL);
+  // Remove caracteres de Markdown (colchetes e parenteses) e espacos
+  url = url.replace(/[\[\]\(\)\s]/g, '');
+
+  // Se a string contiver duas URLs concatenadas por Markdown, pega apenas a primeira ocorrencia limpa
+  if (url.includes('http')) {
+    const match = url.match(/(https?:\/\/[^\/\s]+)/);
+    if (match) {
+      url = match[1];
+    }
   }
 
-  // Se for um caminho relativo (ex: /planos ou /uploads/imagem.jpg)
-  if (endpoint.startsWith('/')) {
-    return `${API_URL}${endpoint}`;
+  // Garante o protocolo https:// correto
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    url = `https://${url}`;
   }
 
-  return endpoint;
+  return url.replace(/\/+$/, ''); // Remove barra no final se houver
 }
+
+export const API_URL = getApiBaseUrl();
