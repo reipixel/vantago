@@ -1,20 +1,8 @@
 'use client'
 import { useState, useEffect } from 'react'
 
-// Sanitizador de URL para garantir direcionamento para a API no Render
-const getCleanApiUrl = () => {
-  let url = process.env.NEXT_PUBLIC_API_URL || 'https://vantago-api.onrender.com'
-  url = url.replace(/[\[\]\(\)\s]/g, '')
-  if (url.startsWith('https:/') && !url.startsWith('https://')) {
-    url = url.replace('https:/', 'https://')
-  }
-  if (!url.startsWith('http://') && !url.startsWith('https://')) {
-    url = `https://${url}`
-  }
-  return url.replace(/\/+$/, '')
-}
-
-const API_URL = getCleanApiUrl()
+// Importa a URL centralizada da API (ajuste o caminho se necessário: '../../lib/api' ou '@/lib/api')
+import { API_URL } from '@/lib/api'
 
 export default function GestaoEntidades() {
   const [entidades, setEntidades] = useState([])
