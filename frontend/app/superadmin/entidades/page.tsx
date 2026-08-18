@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react'
 
 // Importa a URL centralizada da API (ajuste o caminho se necessário: '../../lib/api' ou '@/lib/api')
-import { API_URL } from '@/lib/api'
+import { API_URL } from '../../lib/api'
 
 export default function GestaoEntidades() {
   const [entidades, setEntidades] = useState([])
