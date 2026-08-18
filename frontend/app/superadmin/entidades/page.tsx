@@ -1,6 +1,21 @@
 'use client'
 import { useState, useEffect } from 'react'
 
+// Sanitizador de URL para garantir direcionamento para a API no Render
+const getCleanApiUrl = () => {
+  let url = process.env.NEXT_PUBLIC_API_URL || 'https://vantago-api.onrender.com'
+  url = url.replace(/[\[\]\(\)\s]/g, '')
+  if (url.startsWith('https:/') && !url.startsWith('https://')) {
+    url = url.replace('https:/', 'https://')
+  }
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    url = `https://${url}`
+  }
+  return url.replace(/\/+$/, '')
+}
+
+const API_URL = getCleanApiUrl()
+
 export default function GestaoEntidades() {
   const [entidades, setEntidades] = useState([])
   const [planos, setPlanos] = useState([])
@@ -26,11 +41,11 @@ export default function GestaoEntidades() {
     setLoading(true)
     try {
       const [resOrg, resPla] = await Promise.all([
-        fetch(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/organizacoes'),
-        fetch(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/planos')
+        fetch(`${API_URL}/organizacoes`),
+        fetch(`${API_URL}/planos`)
       ])
-      const orgs = await resOrg.json()
-      const plas = await resPla.json()
+      const orgs = resOrg.ok ? await resOrg.json() : []
+      const plas = resPla.ok ? await resPla.json() : []
       setEntidades(Array.isArray(orgs) ? orgs : [])
       setPlanos(Array.isArray(plas) ? plas : [])
     } catch (err) { 
@@ -54,7 +69,7 @@ export default function GestaoEntidades() {
     }
 
     const method = form.id ? 'PATCH' : 'POST'
-    const url = form.id ? `http://localhost:3000/organizacoes/${form.id}` : process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/organizacoes'
+    const url = form.id ? `${API_URL}/organizacoes/${form.id}` : `${API_URL}/organizacoes`
 
     try {
       const res = await fetch(url, {
@@ -69,7 +84,7 @@ export default function GestaoEntidades() {
         setVerSenha(false)
         carregarDados()
       } else {
-        const errorData = await res.json()
+        const errorData = await res.json().catch(() => ({}))
         alert(`Erro: ${errorData.message || 'Falha ao processar'}`)
       }
     } catch (err) {
@@ -154,41 +169,39 @@ export default function GestaoEntidades() {
                   </div>
                 </td>
                 <td className="px-8 py-6 text-right space-x-2">
-  <button 
-    onClick={() => { 
-      const usuarioAdmin = org.usuarios?.find((u: any) => u.tipo === 'admin');
+                  <button 
+                    onClick={() => { 
+                      const usuarioAdmin = org.usuarios?.find((u: any) => u.tipo === 'admin');
 
-      setForm({
-        id: org.id,
-        nomeLiga: org.nomeLiga,
-        slug: org.slug,
-        planoId: org.planoId || org.plano?.id || '',
-        status: org.status || 'ativa',
-        logoUrl: org.logoUrl || '',
-        nomeAdmin: usuarioAdmin?.nome || '', 
-        emailAdmin: usuarioAdmin?.email || '', 
-        senhaAdmin: usuarioAdmin?.senha || ''
-      }); 
-      setShowModal(true); 
-    }} 
-    className="p-3 bg-slate-900 text-slate-400 hover:text-white rounded-xl border border-slate-700 transition"
-    title="Editar Entidade"
-  >
-    <i className="fas fa-edit"></i>
-  </button>
+                      setForm({
+                        id: org.id,
+                        nomeLiga: org.nomeLiga,
+                        slug: org.slug,
+                        planoId: org.planoId || org.plano?.id || '',
+                        status: org.status || 'ativa',
+                        logoUrl: org.logoUrl || '',
+                        nomeAdmin: usuarioAdmin?.nome || '', 
+                        emailAdmin: usuarioAdmin?.email || '', 
+                        senhaAdmin: ''
+                      }); 
+                      setShowModal(true); 
+                    }} 
+                    className="p-3 bg-slate-900 text-slate-400 hover:text-white rounded-xl border border-slate-700 transition"
+                    title="Editar Entidade"
+                  >
+                    <i className="fas fa-edit"></i>
+                  </button>
 
-                {/* BOTÃO DO DASHBOARD ATIVADO COM REDIRECIONAMENTO DINÂMICO */}
-                <button 
-                onClick={() => {
-                  // Aponta para o dashboard existente, injetando o contexto da liga na URL
-                  window.open(`/admin/dashboard?liga=${org.slug}`, '_blank'); 
-                }}
-                className="p-3 bg-slate-900 text-slate-400 hover:text-yellow-500 rounded-xl border border-slate-700 transition" 
-                title={`Acessar Painel Admin de ${org.nomeLiga}`}
-              >
-                <i className="fas fa-external-link-alt"></i>
-              </button>
-              </td>
+                  <button 
+                    onClick={() => {
+                      window.open(`/admin/dashboard?liga=${org.slug}`, '_blank'); 
+                    }}
+                    className="p-3 bg-slate-900 text-slate-400 hover:text-yellow-500 rounded-xl border border-slate-700 transition" 
+                    title={`Acessar Painel Admin de ${org.nomeLiga}`}
+                  >
+                    <i className="fas fa-external-link-alt"></i>
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
