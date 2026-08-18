@@ -1,22 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
-
-// Sanitizador rigoroso para limpar qualquer sujeira de colchetes ou barras corrompidas
-const getCleanApiUrl = () => {
-  let url = process.env.NEXT_PUBLIC_API_URL || 'https://vantago-api.onrender.com'
-  // Remove colchetes, parenteses e espacos
-  url = url.replace(/[\[\]\(\)\s]/g, '')
-  // Corrigi https:/ para https:// caso tenha vindo com apenas uma barra
-  if (url.startsWith('https:/') && !url.startsWith('https://')) {
-    url = url.replace('https:/', 'https://')
-  }
-  if (!url.startsWith('http://') && !url.startsWith('https://')) {
-    url = `https://${url}`
-  }
-  return url.replace(/\/+$/, '') // Remove barra final se houver
-}
-
-const API_URL = getCleanApiUrl()
+import { API_URL } from '../../lib/api'
 
 export default function GestaoPlanos() {
   const [planos, setPlanos] = useState([])

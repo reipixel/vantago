@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { API_URL } from '../../lib/api'
 
 interface LogItem {
   id: string
@@ -26,7 +27,7 @@ export default function LogsSistema() {
   const carregarLogs = async () => {
     setLoading(true)
     try {
-      const res = await fetch(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/logs')
+      const res = await fetch(`${API_URL}/logs`)
       if (res.ok) {
         const data = await res.json()
         setLogs(Array.isArray(data) ? data : [])
@@ -43,9 +44,9 @@ export default function LogsSistema() {
 
   const logsFiltrados = logs.filter(log => {
     const matchBusca = 
-      log.titulo.toLowerCase().includes(busca.toLowerCase()) ||
-      log.descricao.toLowerCase().includes(busca.toLowerCase()) ||
-      log.liga.toLowerCase().includes(busca.toLowerCase())
+      log.titulo?.toLowerCase().includes(busca.toLowerCase()) ||
+      log.descricao?.toLowerCase().includes(busca.toLowerCase()) ||
+      log.liga?.toLowerCase().includes(busca.toLowerCase())
     
     const matchTipo = filtroTipo === 'todos' || log.tipo === filtroTipo
     return matchBusca && matchTipo

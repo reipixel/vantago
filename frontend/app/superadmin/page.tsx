@@ -1,21 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-
-// Sanitizador de URL para garantir que a requisição vá direto para a API no Render
-const getCleanApiUrl = () => {
-  let url = process.env.NEXT_PUBLIC_API_URL || 'https://vantago-api.onrender.com'
-  url = url.replace(/[\[\]\(\)\s]/g, '')
-  if (url.startsWith('https:/') && !url.startsWith('https://')) {
-    url = url.replace('https:/', 'https://')
-  }
-  if (!url.startsWith('http://') && !url.startsWith('https://')) {
-    url = `https://${url}`
-  }
-  return url.replace(/\/+$/, '')
-}
-
-const API_URL = getCleanApiUrl()
+import { API_URL } from '../lib/api'
 
 interface Metrics {
   totalOrganizacoes: number
