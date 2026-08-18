@@ -52,12 +52,12 @@ export class UsuariosService {
     };
   }
 
-  // BUSCA ADMINISTRADORES DO PLATAFORMA (SUPER ADMINS)
+  // BUSCA EXCLUSIVAMENTE SUPER ADMINS DO SISTEMA (SEM LIGA ASSOCIADA)
   async findAdmins(): Promise<Usuario[]> {
     return this.usuarioRepository.find({
       where: [
-        { tipo: 'admin' },
-        { tipo: 'superadmin' }
+        { tipo: 'admin', organizacaoId: IsNull() },
+        { tipo: 'superadmin', organizacaoId: IsNull() }
       ],
       order: { id: 'DESC' },
     });
