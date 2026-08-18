@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { API_URL } from '../../lib/api'
 
 interface AdminUser {
   id: number
@@ -33,7 +34,7 @@ export default function GestaoSuperAdmins() {
   const carregarAdmins = async () => {
     setLoading(true)
     try {
-      const res = await fetch(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/usuarios/admins', {
+      const res = await fetch(`${API_URL}/usuarios/admins`, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -77,8 +78,8 @@ export default function GestaoSuperAdmins() {
     try {
       const isEdicao = !!adminEdicao
       const url = isEdicao
-        ? `http://localhost:3000/usuarios/${adminEdicao.id}`
-        : process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/usuarios'
+        ? `${API_URL}/usuarios/${adminEdicao.id}`
+        : `${API_URL}/usuarios`
 
       const method = isEdicao ? 'PATCH' : 'POST'
 
@@ -99,7 +100,7 @@ export default function GestaoSuperAdmins() {
         body: JSON.stringify(payload),
       })
 
-      const data = await res.json()
+      const data = await res.json().catch(() => ({}))
 
       if (res.ok) {
         alert(isEdicao ? '✨ Administrador atualizado!' : '🚀 Novo administrador criado!')
@@ -121,7 +122,7 @@ export default function GestaoSuperAdmins() {
     if (!confirm(`Deseja ${novoStatus ? 'ativar' : 'desativar'} o acesso de ${admin.nome}?`)) return
 
     try {
-      const res = await fetch(`http://localhost:3000/usuarios/${admin.id}`, {
+      const res = await fetch(`${API_URL}/usuarios/${admin.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ativo: novoStatus }),
@@ -139,7 +140,7 @@ export default function GestaoSuperAdmins() {
     if (!confirm(`Atenção: Tem certeza que deseja remover ${admin.nome}? Esta ação é irreversível.`)) return
 
     try {
-      const res = await fetch(`http://localhost:3000/usuarios/${admin.id}`, {
+      const res = await fetch(`${API_URL}/usuarios/${admin.id}`, {
         method: 'DELETE',
       })
 
