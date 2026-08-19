@@ -110,6 +110,9 @@ function DashboardConteudo() {
     } catch (err) { alert("Erro ao atualizar") }
   }
 
+  // Define a URL para o painel do associado correspondente
+  const urlPainelAssociado = slugLiga ? `/${slugLiga}` : '/'
+
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700">
       
@@ -195,6 +198,16 @@ function DashboardConteudo() {
         <Link href={slugLiga ? `/admin/dashboard/trocas?liga=${slugLiga}` : "/admin/dashboard/trocas"} className="bg-white border border-gray-200 text-slate-600 px-6 py-3 rounded-lg text-[10px] font-black uppercase tracking-[2px] hover:bg-gray-50 transition flex items-center gap-2">
           <i className="fas fa-exchange-alt"></i> Ver Trocas
         </Link>
+
+        {/* BOTÃO PARA O PAINEL DO ASSOCIADO (ABRE EM NOVA GUIA) */}
+        <a 
+          href={urlPainelAssociado} 
+          target="_blank" 
+          rel="noopener noreferrer" 
+          className="bg-emerald-600 text-white px-6 py-3 rounded-lg text-[10px] font-black uppercase tracking-[2px] hover:bg-emerald-700 transition flex items-center gap-2 shadow-sm"
+        >
+          <i className="fas fa-external-link-alt"></i> Portal Associado <i className="fas fa-arrow-right text-[8px] opacity-70"></i>
+        </a>
       </div>
 
       {/* 3. SOLICITAÇÕES E ATIVIDADES */}
