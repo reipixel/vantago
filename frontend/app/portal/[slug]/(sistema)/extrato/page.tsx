@@ -1,7 +1,12 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { useParams } from 'next/navigation'
+import { API_URL } from '@/app/lib/api'
 
 export default function ExtratoPontos() {
+  const params = useParams()
+  const slug = (params?.slug as string) || ''
+
   const [historico, setHistorico] = useState([])
   const [filtrados, setFiltrados] = useState([])
   const [loading, setLoading] = useState(true)
@@ -12,25 +17,34 @@ export default function ExtratoPontos() {
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem('associado_data') || '{}')
     if (userData.id) carregarExtrato(userData.id)
-  }, [])
+  }, [slug])
 
   useEffect(() => {
-  let resultado = historico.filter(item => 
-    item.motivo.toLowerCase().includes(busca.toLowerCase())
-  );
+    let resultado = historico.filter((item: any) => 
+      item.motivo?.toLowerCase().includes(busca.toLowerCase())
+    )
 
-  // Remova qualquer lógica que oculte valores negativos por padrão
-  if (filtroTipo === 'ganho') resultado = resultado.filter(item => Number(item.valor) > 0);
-  if (filtroTipo === 'gasto') resultado = resultado.filter(item => Number(item.valor) < 0);
+    if (filtroTipo === 'ganho') resultado = resultado.filter((item: any) => Number(item.valor) > 0)
+    if (filtroTipo === 'gasto') resultado = resultado.filter((item: any) => Number(item.valor) < 0)
 
-  setFiltrados(resultado);
-  }, [busca, filtroTipo, historico]);
+    setFiltrados(resultado)
+  }, [busca, filtroTipo, historico])
 
   const carregarExtrato = async (userId: number) => {
     setLoading(true)
     try {
-      // Adicionamos um timestamp (?t=...) para evitar que o navegador sirva dados antigos do cache
-      const res = await fetch(`http://localhost:3000/usuarios/${userId}/extrato-completo?t=${Date.now()}`)
+      let url = `${API_URL}/usuarios/${userId}/extrato-completo?t=${Date.now()}`
+      if (slug) {
+        url += `&liga=${slug}`
+      }
+
+      const res = await fetch(url, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(slug ? { 'X-Organization-Slug': slug } : {})
+        }
+      })
+
       if (res.ok) {
         const data = await res.json()
         setHistorico(data)
@@ -48,12 +62,14 @@ export default function ExtratoPontos() {
       <div className="flex justify-between items-end mb-10">
         <div>
           <h1 className="text-3xl font-black text-slate-800 tracking-tighter italic uppercase leading-none">Extrato de Pontos</h1>
-          <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[2px] mt-2 italic">Confira toda sua movimentação na liga</p>
+          <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[2px] mt-2 italic">
+            Confira toda sua movimentação na liga {slug ? `(${slug})` : ''}
+          </p>
         </div>
         <button 
           onClick={() => {
             const userData = JSON.parse(localStorage.getItem('associado_data') || '{}')
-            carregarExtrato(userData.id)
+            if (userData.id) carregarExtrato(userData.id)
           }}
           className="w-10 h-10 bg-white border border-slate-100 rounded-xl flex items-center justify-center text-slate-400 hover:text-indigo-600 transition-all shadow-sm"
           title="Atualizar"

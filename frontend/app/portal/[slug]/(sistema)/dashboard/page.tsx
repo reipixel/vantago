@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
+import { API_URL } from '@/app/lib/api'
 
 export default function PortalDashboard() {
   const params = useParams()
@@ -42,9 +43,9 @@ export default function PortalDashboard() {
 
       // 2. Busca Histórico, Configurações Isoladas por Liga e Catálogo
       const [resHist, resConfig, resProdutos] = await Promise.all([
-        fetch(`http://127.0.0.1:3000/usuarios/${userId}/historico`, { headers }),
-        fetch(`http://127.0.0.1:3000/configuracoes/1?liga=${slug}`, { headers }),
-        fetch(`http://127.0.0.1:3000/produtos?liga=${slug}`, { headers })
+        fetch(`${API_URL}/usuarios/${userId}/historico`, { headers }),
+        fetch(`${API_URL}/configuracoes/1?liga=${slug}`, { headers }),
+        fetch(`${API_URL}/produtos?liga=${slug}`, { headers })
       ])
 
       if (resHist.ok) {
@@ -88,6 +89,11 @@ export default function PortalDashboard() {
     const percent = Math.min(Math.round((saldo / preco) * 100), 100)
     const faltam = Math.max(preco - saldo, 0)
     return { percent, faltam }
+  }
+
+  const formatarImagem = (caminho?: string) => {
+    if (!caminho) return null
+    return caminho.startsWith('http') ? caminho : `${API_URL}${caminho}`
   }
 
   return (
@@ -155,7 +161,7 @@ export default function PortalDashboard() {
                   <div className="bg-white h-48 rounded-[30px] flex items-center justify-center shadow-inner shadow-slate-100 relative overflow-hidden">
                     {destaquePrincipal.imagem_p ? (
                       <img 
-                        src={`http://127.0.0.1:3000${destaquePrincipal.imagem_p}`} 
+                        src={formatarImagem(destaquePrincipal.imagem_p) || ''} 
                         className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
                         alt={destaquePrincipal.nome} 
                       />
@@ -214,7 +220,7 @@ export default function PortalDashboard() {
                     <div className="flex items-center gap-3 overflow-hidden">
                       <div className="w-10 h-10 bg-white rounded-xl overflow-hidden border border-slate-100 shrink-0">
                         {item.imagem_p ? (
-                          <img src={`http://127.0.0.1:3000${item.imagem_p}`} className="w-full h-full object-cover" alt="" />
+                          <img src={formatarImagem(item.imagem_p) || ''} className="w-full h-full object-cover" alt="" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-slate-200 text-xs"><i className="fas fa-box"></i></div>
                         )}

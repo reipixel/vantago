@@ -1,7 +1,12 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { useParams } from 'next/navigation'
+import { API_URL } from '@/app/lib/api'
 
 export default function HistoricoTrocas() {
+  const params = useParams()
+  const slug = (params?.slug as string) || ''
+
   const [pedidos, setPedidos] = useState([])
   const [pedidosFiltrados, setPedidosFiltrados] = useState([])
   const [loading, setLoading] = useState(true)
@@ -13,16 +18,16 @@ export default function HistoricoTrocas() {
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem('associado_data') || '{}')
     if (userData.id) carregarPedidos(userData.id)
-  }, [])
+  }, [slug])
 
   // Lógica de Filtragem em tempo real
   useEffect(() => {
-    let resultado = pedidos.filter(p => 
-      p.produto?.nome.toLowerCase().includes(busca.toLowerCase())
+    let resultado = pedidos.filter((p: any) => 
+      p.produto?.nome?.toLowerCase().includes(busca.toLowerCase())
     )
 
     if (filtroStatus !== 'todos') {
-      resultado = resultado.filter(p => p.status === filtroStatus)
+      resultado = resultado.filter((p: any) => p.status === filtroStatus)
     }
 
     setPedidosFiltrados(resultado)
@@ -30,14 +35,25 @@ export default function HistoricoTrocas() {
 
   const carregarPedidos = async (userId: number) => {
     try {
-      const res = await fetch(`http://localhost:3000/produtos/pedidos/${userId}`)
+      let url = `${API_URL}/produtos/pedidos/${userId}`
+      if (slug) {
+        url += `?liga=${slug}`
+      }
+
+      const res = await fetch(url, {
+        headers: {
+          'Content-Type': 'application/json',
+          ...(slug ? { 'X-Organization-Slug': slug } : {})
+        }
+      })
+
       if (res.ok) {
         const data = await res.json()
         setPedidos(data)
         setPedidosFiltrados(data)
       }
     } catch (err) {
-      console.error(err)
+      console.error("Erro ao carregar histórico de trocas:", err)
     } finally {
       setLoading(false)
     }
@@ -53,11 +69,18 @@ export default function HistoricoTrocas() {
     }
   }
 
+  const formatarImagem = (caminho?: string) => {
+    if (!caminho) return null
+    return caminho.startsWith('http') ? caminho : `${API_URL}${caminho}`
+  }
+
   return (
     <div className="animate-in fade-in duration-700 pb-20">
       <div className="mb-8">
         <h1 className="text-3xl font-black text-slate-800 tracking-tighter italic uppercase leading-none">Minhas Trocas</h1>
-        <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[2px] mt-2 italic">Gerencie e acompanhe seus resgates</p>
+        <p className="text-slate-400 font-bold text-[10px] uppercase tracking-[2px] mt-2 italic">
+          Gerencie e acompanhe seus resgates na liga {slug ? `(${slug})` : ''}
+        </p>
       </div>
 
       {/* ÁREA DE FILTROS */}
@@ -98,7 +121,7 @@ export default function HistoricoTrocas() {
               <div className="flex items-center gap-4">
                 <div className="w-14 h-14 bg-slate-50 rounded-[22px] flex items-center justify-center text-2xl overflow-hidden border border-slate-100 shadow-inner">
                   {pedido.produto?.imagem_p ? (
-                    <img src={`http://localhost:3000${pedido.produto.imagem_p}`} className="w-full h-full object-cover" alt="Produto" />
+                    <img src={formatarImagem(pedido.produto.imagem_p) || ''} className="w-full h-full object-cover" alt="Produto" />
                   ) : <i className="fas fa-gift text-slate-200 text-sm"></i>}
                 </div>
                 <div>
@@ -107,7 +130,7 @@ export default function HistoricoTrocas() {
                   </h3>
                   <div className="flex items-center gap-2">
                     <span className="text-[9px] text-slate-400 font-bold uppercase">
-                        {new Date(pedido.data_solicitacao).toLocaleDateString('pt-BR')}
+                      {pedido.data_solicitacao ? new Date(pedido.data_solicitacao).toLocaleDateString('pt-BR') : ''}
                     </span>
                     <span className="w-1 h-1 bg-slate-200 rounded-full"></span>
                     <span className="text-[9px] font-black text-indigo-500 uppercase tracking-tighter">ID: #{pedido.id}</span>

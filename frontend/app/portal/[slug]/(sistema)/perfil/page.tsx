@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
+import { API_URL } from '@/app/lib/api'
 
 export default function PerfilAssociado() {
   const params = useParams()
@@ -52,7 +53,7 @@ export default function PerfilAssociado() {
         ...(slug ? { 'X-Organization-Slug': slug } : {})
       }
 
-      const res = await fetch(`http://localhost:3000/usuarios/${userObj.id}`, { headers })
+      const res = await fetch(`${API_URL}/usuarios/${userObj.id}`, { headers })
       const dadosCompletos = res.ok ? await res.json() : userObj
 
       setUser(dadosCompletos)
@@ -87,7 +88,7 @@ export default function PerfilAssociado() {
       }
       const queryLiga = slug ? `?liga=${slug}` : ''
 
-      const res = await fetch(`http://localhost:3000/configuracoes/1${queryLiga}`, { headers })
+      const res = await fetch(`${API_URL}/configuracoes/1${queryLiga}`, { headers })
       if (res.ok) {
         const data = await res.json()
         setConfig({
@@ -125,7 +126,7 @@ export default function PerfilAssociado() {
         ...(slug ? { 'X-Organization-Slug': slug } : {})
       }
 
-      const res = await fetch(`http://localhost:3000/usuarios/${user.id}/perfil`, {
+      const res = await fetch(`${API_URL}/usuarios/${user.id}/perfil`, {
         method: 'PATCH',
         headers,
         body: formData, 
@@ -164,6 +165,11 @@ export default function PerfilAssociado() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const formatarImagem = (caminho?: string) => {
+    if (!caminho) return null
+    return caminho.startsWith('http') ? caminho : `${API_URL}${caminho}`
   }
 
   if (carregandoDados) {
@@ -279,7 +285,7 @@ export default function PerfilAssociado() {
                 <div className="w-32 h-32 rounded-[40px] bg-slate-100 border-4 border-white shadow-xl overflow-hidden flex items-center justify-center transition-transform group-hover:scale-105 duration-500">
                   {fotoPreview || user.foto_url ? (
                     <img 
-                      src={fotoPreview || `http://localhost:3000${user.foto_url}`} 
+                      src={fotoPreview || formatarImagem(user.foto_url) || ''} 
                       className="w-full h-full object-cover" 
                       alt="Avatar" 
                     />

@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
+import { API_URL } from '@/app/lib/api'
 
 export default function ListaAtividadesPortal() {
   const params = useParams()
@@ -13,8 +14,8 @@ export default function ListaAtividadesPortal() {
   useEffect(() => {
     // Constrói a URL passando a liga como parâmetro e nos cabeçalhos multi-tenant
     const url = slug 
-      ? `http://localhost:3000/atividades?liga=${slug}` 
-      : process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/atividades'
+      ? `${API_URL}/atividades?liga=${slug}` 
+      : `${API_URL}/atividades`
 
     fetch(url, {
       headers: {
@@ -32,6 +33,12 @@ export default function ListaAtividadesPortal() {
       .catch(err => console.error("Erro ao carregar atividades:", err))
       .finally(() => setLoading(false))
   }, [slug])
+
+  // Helper para formatar o caminho da imagem de forma segura
+  const formatarImagem = (caminho?: string) => {
+    if (!caminho) return null
+    return caminho.startsWith('http') ? caminho : `${API_URL}${caminho}`
+  }
 
   return (
     <div className="animate-in fade-in duration-700 pb-28">
@@ -57,7 +64,7 @@ export default function ListaAtividadesPortal() {
               <div className="h-48 w-full relative overflow-hidden">
                 {acao.imagem_p ? (
                   <img 
-                    src={`http://localhost:3000${acao.imagem_p}`} 
+                    src={formatarImagem(acao.imagem_p) || ''} 
                     className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" 
                     alt={acao.nome} 
                   />
@@ -123,7 +130,7 @@ export default function ListaAtividadesPortal() {
 
             <div className="h-64 w-full relative">
               {atividadeSelecionada.imagem_p ? (
-                <img src={`http://localhost:3000${atividadeSelecionada.imagem_p}`} className="w-full h-full object-cover" alt={atividadeSelecionada.nome} />
+                <img src={formatarImagem(atividadeSelecionada.imagem_p) || ''} className="w-full h-full object-cover" alt={atividadeSelecionada.nome} />
               ) : (
                 <div className="w-full h-full bg-slate-100 flex items-center justify-center text-slate-300 text-5xl"><i className="fas fa-tasks"></i></div>
               )}

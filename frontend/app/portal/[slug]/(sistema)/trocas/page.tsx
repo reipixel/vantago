@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
+import { API_URL } from '@/app/lib/api'
 
 export default function CatalogoTrocas() {
   const params = useParams()
@@ -44,9 +45,9 @@ export default function CatalogoTrocas() {
       const queryLiga = slug ? `&liga=${slug}` : ''
 
       const [resProd, resCat, resPed] = await Promise.all([
-        fetch(`http://localhost:3000/produtos?ativos=true${queryLiga}&t=${new Date().getTime()}`, { headers }),
-        fetch(`http://localhost:3000/produtos/categorias?t=${new Date().getTime()}${queryLiga}`, { headers }),
-        fetch(`http://localhost:3000/produtos/pedidos/${userId}`, { headers })
+        fetch(`${API_URL}/produtos?ativos=true${queryLiga}&t=${new Date().getTime()}`, { headers }),
+        fetch(`${API_URL}/produtos/categorias?t=${new Date().getTime()}${queryLiga}`, { headers }),
+        fetch(`${API_URL}/produtos/pedidos/${userId}`, { headers })
       ])
 
       if (resProd.ok) {
@@ -94,7 +95,7 @@ export default function CatalogoTrocas() {
         produtoId: item.id
       }
 
-      const res = await fetch(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/produtos/resgatar', {
+      const res = await fetch(`${API_URL}/produtos/resgatar`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -127,6 +128,11 @@ export default function CatalogoTrocas() {
       console.error("Erro no resgate:", err)
       alert("Erro de conexão ao processar o resgate.")
     }
+  }
+
+  const formatarImagem = (caminho?: string) => {
+    if (!caminho) return null
+    return caminho.startsWith('http') ? caminho : `${API_URL}${caminho}`
   }
 
   const itensFiltrados = itens.filter((item: any) => {
@@ -213,7 +219,7 @@ export default function CatalogoTrocas() {
                     {item.preco_pontos} PTS
                   </div>
                   {item.imagem_p ? (
-                    <img src={`http://localhost:3000${item.imagem_p}`} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-700" alt={item.nome} />
+                    <img src={formatarImagem(item.imagem_p) || ''} className="w-full h-full object-cover group-hover:scale-110 transition-all duration-700" alt={item.nome} />
                   ) : <span className="group-hover:rotate-12 transition-all duration-500">🎁</span>}
                 </div>
 
@@ -246,7 +252,7 @@ export default function CatalogoTrocas() {
 
             <div className={`h-64 bg-slate-100 relative ${modalItem.estoque <= 0 ? 'grayscale' : ''}`}>
               {modalItem.imagem_g ? (
-                <img src={`http://localhost:3000${modalItem.imagem_g}`} className="w-full h-full object-cover" alt={modalItem.nome} />
+                <img src={formatarImagem(modalItem.imagem_g) || ''} className="w-full h-full object-cover" alt={modalItem.nome} />
               ) : <div className="w-full h-full flex items-center justify-center text-8xl">🎁</div>}
             </div>
 
