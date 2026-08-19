@@ -6,18 +6,18 @@ import { API_URL } from '@/app/lib/api'
 function LoginConteudo() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const slugLiga = searchParams.get('liga')
+  const slugLiga = searchParams.get('liga') || searchParams.get('slug')
 
   const [identificador, setIdentificador] = useState('')
   const [senha, setSenha] = useState('')
   const [verSenha, setVerSenha] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  // Se já estiver logado e entrar na tela de login, encaminha para o dashboard preservando o contexto da liga
+  // Se já estiver logado, redireciona para a rota correta: /portal/[slug]/dashboard
   useEffect(() => {
     if (localStorage.getItem('associado_token')) {
-      const rotaDashboard = slugLiga ? `/portal/dashboard?liga=${slugLiga}` : '/portal/dashboard'
-      router.replace(rotaDashboard)
+      const ligaSalva = slugLiga || localStorage.getItem('associado_liga') || 'default'
+      router.replace(`/portal/${ligaSalva}/dashboard`)
     }
   }, [router, slugLiga])
 
@@ -42,19 +42,24 @@ function LoginConteudo() {
 
       if (res.ok) {
         const data = await res.json()
+        
+        // Define o slug da liga a ser utilizado na rota
+        const ligaDestino = slugLiga || data.user?.liga_slug || data.user?.organizacao_slug || 'default'
+
+        // Salva as credenciais e a sessão isolada para a liga
         localStorage.setItem('associado_token', data.token)
         localStorage.setItem('associado_data', JSON.stringify(data.user))
-        if (slugLiga) {
-          localStorage.setItem('associado_liga', slugLiga)
-        }
+        localStorage.setItem('associado_liga', ligaDestino)
+        localStorage.setItem(`@associado_session_${ligaDestino}`, JSON.stringify(data.user))
 
-        const rotaDestino = slugLiga ? `/portal/dashboard?liga=${slugLiga}` : '/portal/dashboard'
-        router.replace(rotaDestino)
+        // Redireciona para a rota dinâmica correta das páginas do portal
+        router.replace(`/portal/${ligaDestino}/dashboard`)
       } else {
         const errData = await res.json()
         alert(`❌ ${errData.message || 'Dados incorretos.'}`)
       }
     } catch (err) {
+      console.error('Erro ao efetuar login:', err)
       alert('Erro ao conectar com o servidor.')
     } finally {
       setLoading(false)
