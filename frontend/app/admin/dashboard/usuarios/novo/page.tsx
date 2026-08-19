@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { API_URL } from '../../../../../lib/api'
 
 export default function NovoUsuario() {
   const [enviando, setEnviando] = useState(false)
@@ -27,12 +28,15 @@ export default function NovoUsuario() {
     setEnviando(true);
     
     try {
-      let url = process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/usuarios'
+      let url = `${API_URL}/usuarios`
       if (liga) url += `?liga=${liga}`
 
       const response = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(liga ? { 'X-Organization-Slug': liga } : {})
+        },
         body: JSON.stringify(formData),
       });
 

@@ -2,6 +2,7 @@
 import { useEffect, useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
+import { API_URL } from '../../lib/api'
 
 function DashboardConteudo() {
   const searchParams = useSearchParams()
@@ -25,9 +26,6 @@ function DashboardConteudo() {
   const carregarDadosDashboard = async () => {
     setLoading(true)
     try {
-      // Ajustado para localhost para manter consistência de cabeçalhos de CORS com o main.ts do backend
-      const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com';
-      
       const fetchDados = async (url: string) => {
         try {
           // Adiciona o parâmetro de liga na URL se ele existir no contexto
@@ -50,7 +48,6 @@ function DashboardConteudo() {
         }
       };
 
-      // CORREÇÃO: endpoint alterado de '/usuarios/associados' para o correto '/usuarios'
       const [usuariosRaw, todosPedidosRaw, atividadesRaw] = await Promise.all([
         fetchDados(`${API_URL}/usuarios`),
         fetchDados(`${API_URL}/produtos/pedidos`),
@@ -93,7 +90,7 @@ function DashboardConteudo() {
 
     } catch (err) {
       console.error("Erro crítico no dashboard:", err);
-    } finally {
+    } fontally {
       setLoading(false);
     }
   };
@@ -101,7 +98,7 @@ function DashboardConteudo() {
   const handleStatusTroca = async (id: number, novoStatus: string) => {
     if (!confirm(`Deseja alterar o status para ${novoStatus}?`)) return
     try {
-      const res = await fetch(`http://localhost:3000/produtos/pedidos/${id}/status`, {
+      const res = await fetch(`${API_URL}/produtos/pedidos/${id}/status`, {
         method: 'PATCH',
         headers: { 
           'Content-Type': 'application/json',

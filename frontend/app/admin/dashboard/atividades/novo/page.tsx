@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
+import { API_URL } from '../../../../../lib/api'
 
 // Editor compatível com React 18/19
 import 'react-quill-new/dist/quill.snow.css'
@@ -39,7 +40,7 @@ export default function FormAtividade() {
   useEffect(() => {
     if (editId) {
       setFetching(true);
-      fetch(`http://localhost:3000/atividades/${editId}`)
+      fetch(`${API_URL}/atividades/${editId}`)
         .then(res => res.json())
         .then(data => {
           console.log("Dados recebidos da API:", data);
@@ -60,7 +61,7 @@ export default function FormAtividade() {
           });
 
           if (data.imagem_p) {
-            setPreview(`http://localhost:3000${data.imagem_p}`);
+            setPreview(data.imagem_p.startsWith('http') ? data.imagem_p : `${API_URL}${data.imagem_p}`);
           }
         })
         .finally(() => setFetching(false));
@@ -95,8 +96,8 @@ export default function FormAtividade() {
 
     try {
       let url = editId 
-        ? `http://localhost:3000/atividades/${editId}` 
-        : process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/atividades'
+        ? `${API_URL}/atividades/${editId}` 
+        : `${API_URL}/atividades`
       
       // BLINDAGEM MULTI-TENANT: Anexa a liga à URL da chamada da API para o NestJS isolar o registro
       if (slugLiga) {

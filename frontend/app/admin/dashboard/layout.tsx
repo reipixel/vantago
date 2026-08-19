@@ -2,6 +2,7 @@
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState, Suspense } from 'react'
+import { API_URL } from '../../lib/api'
 
 function DashboardLayoutConteudo({ children }: { children: React.ReactNode }) {
   const router = useRouter()
@@ -19,8 +20,8 @@ function DashboardLayoutConteudo({ children }: { children: React.ReactNode }) {
     window.fetch = async function (input, init) {
       let url = typeof input === 'string' ? input : input instanceof URL ? input.href : (input as Request).url;
       
-      // Se a requisição for para o seu backend local e ainda não tiver o parâmetro da liga
-      if (url.includes(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com') || url.includes('http://127.0.0.1:3000')) {
+      // Se a requisição for para a API e ainda não tiver o parâmetro da liga
+      if (url.includes(API_URL)) {
         if (!url.includes('liga=')) {
           url += url.includes('?') ? `&liga=${slugLiga}` : `?liga=${slugLiga}`;
         }
@@ -54,7 +55,7 @@ function DashboardLayoutConteudo({ children }: { children: React.ReactNode }) {
   const carregarDadosDaLiga = async () => {
     if (!slugLiga) return
     try {
-      const res = await fetch(`http://localhost:3000/organizacoes`)
+      const res = await fetch(`${API_URL}/organizacoes`)
       if (res.ok) {
         const organizacoes = await res.json()
         if (Array.isArray(organizacoes)) {
@@ -71,7 +72,7 @@ function DashboardLayoutConteudo({ children }: { children: React.ReactNode }) {
 
   const buscarTrocasPendentes = async () => {
     try {
-      const res = await fetch(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/produtos/admin/pedidos')
+      const res = await fetch(`${API_URL}/produtos/admin/pedidos`)
       if (res.ok) {
         const data = await res.json()
         if (Array.isArray(data)) {

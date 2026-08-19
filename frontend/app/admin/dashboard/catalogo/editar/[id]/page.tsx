@@ -3,6 +3,7 @@ import { useState, useEffect, use } from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { API_URL } from '../../../../../../lib/api'
 
 import 'react-quill-new/dist/quill.snow.css'
 
@@ -46,13 +47,13 @@ export default function EditarItem({ params }: { params: Promise<{ id: string }>
 
     // Ajusta a rota para carregar as categorias no contexto da liga atual
     const urlCategorias = slug
-      ? `http://localhost:3000/produtos/categorias?liga=${slug}`
-      : process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/produtos/categorias'
+      ? `${API_URL}/produtos/categorias?liga=${slug}`
+      : `${API_URL}/produtos/categorias`
 
     // Ajusta a rota para trazer apenas os produtos da liga correta e achar o ID correspondente
     const urlProdutos = slug
-      ? `http://localhost:3000/produtos?liga=${slug}&t=${Date.now()}`
-      : `http://localhost:3000/produtos?t=${Date.now()}`
+      ? `${API_URL}/produtos?liga=${slug}&t=${Date.now()}`
+      : `${API_URL}/produtos?t=${Date.now()}`
 
     Promise.all([
       fetch(urlCategorias).then(res => res.json()),
@@ -70,7 +71,11 @@ export default function EditarItem({ params }: { params: Promise<{ id: string }>
         setDescricao(item.descricao || '')
         setCategoriaId(item.categoria?.id || '')
         setStatus(item.status || 'ativo')
-        setPreview(item.imagem_p ? `http://localhost:3000${item.imagem_p}` : null)
+        if (item.imagem_p) {
+          setPreview(item.imagem_p.startsWith('http') ? item.imagem_p : `${API_URL}${item.imagem_p}`)
+        } else {
+          setPreview(null)
+        }
       }
       setLoading(false)
     }).catch(err => {
@@ -101,7 +106,12 @@ export default function EditarItem({ params }: { params: Promise<{ id: string }>
     data.append('status', status)
 
     try {
-      const res = await fetch(`http://localhost:3000/produtos/${id}`, {
+      let url = `${API_URL}/produtos/${id}`
+      if (liga) {
+        url += `?liga=${liga}`
+      }
+
+      const res = await fetch(url, {
         method: 'PATCH',
         body: data, 
       })

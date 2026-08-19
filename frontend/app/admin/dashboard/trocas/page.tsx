@@ -1,5 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
+import { API_URL } from '../../../lib/api'
 
 export default function AdminGerenciarTrocas() {
   const [trocas, setTrocas] = useState([])
@@ -9,6 +10,14 @@ export default function AdminGerenciarTrocas() {
   // Estados dos Filtros
   const [busca, setBusca] = useState('')
   const [filtroStatus, setFiltroStatus] = useState('todos')
+
+  const obterSlugLigaContexto = () => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      return params.get('liga')
+    }
+    return null
+  }
 
   useEffect(() => {
     carregarTrocas()
@@ -33,11 +42,17 @@ export default function AdminGerenciarTrocas() {
 
   const carregarTrocas = async () => {
     try {
-      const res = await fetch(`http://localhost:3000/produtos/admin/pedidos?t=${Date.now()}`)
+      const liga = obterSlugLigaContexto()
+      let url = `${API_URL}/produtos/admin/pedidos?t=${Date.now()}`
+      if (liga) {
+        url += `&liga=${liga}`
+      }
+
+      const res = await fetch(url)
       if (res.ok) {
         const data = await res.json()
-        setTrocas(data)
-        setFiltrados(data)
+        setTrocas(Array.isArray(data) ? data : [])
+        setFiltrados(Array.isArray(data) ? data : [])
       }
     } catch (err) { 
       console.error("Erro ao carregar trocas:", err) 
@@ -51,9 +66,18 @@ export default function AdminGerenciarTrocas() {
     if (!confirm(`Deseja alterar o status para ${msg}?`)) return
 
     try {
-      const res = await fetch(`http://localhost:3000/produtos/pedidos/${id}/status`, {
+      const liga = obterSlugLigaContexto()
+      let url = `${API_URL}/produtos/pedidos/${id}/status`
+      if (liga) {
+        url += `?liga=${liga}`
+      }
+
+      const res = await fetch(url, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(liga ? { 'X-Organization-Slug': liga } : {})
+        },
         body: JSON.stringify({ status: novoStatus })
       })
       if (res.ok) carregarTrocas()

@@ -1,6 +1,7 @@
 'use client'
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
+import { API_URL } from '../../../../lib/api'
 
 function ConfiguracoesConteudo() {
   const searchParams = useSearchParams()
@@ -67,18 +68,20 @@ function ConfiguracoesConteudo() {
   const carregarDadosBase = async () => {
     try {
       const [resProd, resCat] = await Promise.all([
-        fetch(formatarUrl(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/produtos'), { headers: obterHeaders() }),
-        fetch(formatarUrl(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/produtos/categorias'), { headers: obterHeaders() })
+        fetch(formatarUrl(`${API_URL}/produtos`), { headers: obterHeaders() }),
+        fetch(formatarUrl(`${API_URL}/produtos/categorias`), { headers: obterHeaders() })
       ])
-      setProdutosCatalogo(await resProd.json())
-      setCategorias(await resCat.json())
+      const dadosProd = await resProd.json()
+      const dadosCat = await resCat.json()
+      setProdutosCatalogo(Array.isArray(dadosProd) ? dadosProd : [])
+      setCategorias(Array.isArray(dadosCat) ? dadosCat : [])
     } catch (err) { console.error(err) }
   }
 
   const carregarIdentidade = async () => {
     setLoading(true)
     try {
-      const res = await fetch(formatarUrl(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/configuracoes/1'), {
+      const res = await fetch(formatarUrl(`${API_URL}/configuracoes/1`), {
         headers: obterHeaders()
       })
       if (res.ok) {
@@ -109,7 +112,7 @@ function ConfiguracoesConteudo() {
 
   const carregarAdmins = async () => {
     try {
-      const res = await fetch(formatarUrl(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/usuarios/admins'), {
+      const res = await fetch(formatarUrl(`${API_URL}/usuarios/admins`), {
         headers: obterHeaders()
       })
       const data = await res.json()
@@ -121,12 +124,12 @@ function ConfiguracoesConteudo() {
     e.preventDefault()
     setSaving(true)
     try {
-      const res = await fetch(formatarUrl(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/configuracoes/1'), {
+      const res = await fetch(formatarUrl(`${API_URL}/configuracoes/1`), {
         method: 'PATCH',
         headers: obterHeaders(),
         body: JSON.stringify(dados)
       })
-      if (res.ok) alert('✨ Configurações updated successfully!')
+      if (res.ok) alert('✨ Configurações atualizadas com sucesso!')
     } catch (err) { alert("Erro de conexão.") } finally { setSaving(false) }
   }
 
@@ -134,7 +137,7 @@ function ConfiguracoesConteudo() {
     e.preventDefault()
     setSaving(true)
     try {
-      const urlBase = userForm.id ? `http://localhost:3000/usuarios/${userForm.id}` : process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/usuarios'
+      const urlBase = userForm.id ? `${API_URL}/usuarios/${userForm.id}` : `${API_URL}/usuarios`
       
       const payload: any = { ...userForm }
       if (userForm.id && !userForm.senha.trim()) {
@@ -159,7 +162,7 @@ function ConfiguracoesConteudo() {
 
   const handleExcluirUser = async (id: number) => {
     if (!confirm('Remover este acesso administrativo permanentemente?')) return
-    await fetch(formatarUrl(`http://localhost:3000/usuarios/${id}`), { 
+    await fetch(formatarUrl(`${API_URL}/usuarios/${id}`), { 
       method: 'DELETE',
       headers: obterHeaders()
     })
@@ -168,7 +171,7 @@ function ConfiguracoesConteudo() {
 
   const ItemSelector = ({ label, value, onChange, highlight = false }: any) => {
     const filtrados = produtosCatalogo.filter((p: any) => {
-      const matchBusca = p.nome.toLowerCase().includes(buscaItem.toLowerCase())
+      const matchBusca = p.nome?.toLowerCase().includes(buscaItem.toLowerCase())
       const matchCat = catFiltro === 'todas' || p.categoria?.id === Number(catFiltro)
       return matchBusca && matchCat
     })

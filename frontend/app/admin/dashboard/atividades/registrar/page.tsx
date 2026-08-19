@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { API_URL } from '../../../../../lib/api'
 
 export default function RegistrarPontos() {
   const [usuarios, setUsuarios] = useState([])
@@ -9,20 +10,33 @@ export default function RegistrarPontos() {
   const [selecionados, setSelecionados] = useState<number[]>([])
   const [loading, setLoading] = useState(false)
 
+  // Captura o parâmetro de contexto da liga da URL
+  const obterSlugLigaContexto = () => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      return params.get('liga')
+    }
+    return null
+  }
+
   useEffect(() => {
+    const liga = obterSlugLigaContexto()
+    const urlUsers = liga ? `${API_URL}/usuarios?liga=${liga}` : `${API_URL}/usuarios`
+    const urlAtiv = liga ? `${API_URL}/atividades?liga=${liga}` : `${API_URL}/atividades`
+
     Promise.all([
-      fetch(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/usuarios').then(res => res.json()),
-      fetch(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/atividades').then(res => res.json())
+      fetch(urlUsers).then(res => res.json()),
+      fetch(urlAtiv).then(res => res.json())
     ]).then(([userData, ativData]) => {
-      setUsuarios(userData)
-      setAtividades(ativData.filter((a: any) => a.status === 'ativa'))
-    })
+      setUsuarios(Array.isArray(userData) ? userData : [])
+      setAtividades(Array.isArray(ativData) ? ativData.filter((a: any) => a.status === 'ativa') : [])
+    }).catch(err => console.error("Erro ao carregar dados:", err))
   }, [])
 
   // Filtra os usuários conforme a busca (nome ou email)
   const usuariosFiltrados = usuarios.filter((u: any) =>
-    u.nome.toLowerCase().includes(busca.toLowerCase()) ||
-    u.email.toLowerCase().includes(busca.toLowerCase())
+    u.nome?.toLowerCase().includes(busca.toLowerCase()) ||
+    u.email?.toLowerCase().includes(busca.toLowerCase())
   )
 
   const toggleUsuario = (id: number) => {
@@ -37,9 +51,18 @@ export default function RegistrarPontos() {
     
     setLoading(true)
     try {
-      const res = await fetch(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/atividades/registrar-multiplo', {
+      const liga = obterSlugLigaContexto()
+      let url = `${API_URL}/atividades/registrar-multiplo`
+      if (liga) {
+        url += `?liga=${liga}`
+      }
+
+      const res = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(liga ? { 'X-Organization-Slug': liga } : {})
+        },
         body: JSON.stringify({ atividadeId, usuariosIds: selecionados }),
       })
 
@@ -47,6 +70,8 @@ export default function RegistrarPontos() {
         alert(`🎉 Sucesso! Pontos creditados para ${selecionados.length} associados.`)
         setSelecionados([])
         setBusca('')
+      } else {
+        alert('Erro ao registrar pontos.')
       }
     } catch (error) {
       alert('Erro ao processar pontos.')

@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { API_URL } from '../../../../../lib/api'
 
 // CSS do Editor
 import 'react-quill-new/dist/quill.snow.css'
@@ -44,8 +45,8 @@ export default function NovoItem() {
     setLiga(slug)
 
     const urlCategorias = slug
-      ? `http://localhost:3000/produtos/categorias?liga=${slug}`
-      : process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/produtos/categorias'
+      ? `${API_URL}/produtos/categorias?liga=${slug}`
+      : `${API_URL}/produtos/categorias`
 
     fetch(urlCategorias)
       .then(res => res.json())
@@ -82,7 +83,7 @@ export default function NovoItem() {
 
     try {
       // Injeta explicitamente o slug da liga na query para o backend saber qual organizacaoId aplicar
-      let url = process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/produtos'
+      let url = `${API_URL}/produtos`
       if (liga) url += `?liga=${liga}`
 
       const res = await fetch(url, {

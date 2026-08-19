@@ -1,6 +1,7 @@
 'use client'
-import { useEffect, useState, use } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
+import { API_URL } from '../../../../../../lib/api'
 
 export default function EditarUsuario() {
   const router = useRouter()
@@ -21,10 +22,14 @@ export default function EditarUsuario() {
       const slug = params.get('liga')
       setLiga(slug)
 
-      let url = `http://localhost:3000/usuarios/${id}`
+      let url = `${API_URL}/usuarios/${id}`
       if (slug) url += `?liga=${slug}`
 
-      fetch(url)
+      fetch(url, {
+        headers: {
+          ...(slug ? { 'X-Organization-Slug': slug } : {})
+        }
+      })
         .then(res => res.json())
         .then(data => {
           setFormData({ 
@@ -43,7 +48,7 @@ export default function EditarUsuario() {
     setSaving(true)
 
     try {
-      let url = `http://localhost:3000/usuarios/${id}`
+      let url = `${API_URL}/usuarios/${id}`
       if (liga) url += `?liga=${liga}`
 
       const payload: any = {
@@ -57,16 +62,22 @@ export default function EditarUsuario() {
 
       const res = await fetch(url, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(liga ? { 'X-Organization-Slug': liga } : {})
+        },
         body: JSON.stringify(payload),
       })
 
       if (res.ok) {
         alert('✅ Dados atualizados!')
         router.push(liga ? `/admin/dashboard/usuarios?liga=${liga}` : '/admin/dashboard/usuarios')
+      } else {
+        const errData = await res.json()
+        alert(`❌ Erro: ${errData.message || 'Falha ao atualizar.'}`)
       }
     } catch (error) {
-      alert('❌ Erro ao atualizar.')
+      alert('❌ Erro de conexão ao atualizar.')
     } finally {
       setSaving(false)
     }
@@ -91,7 +102,7 @@ export default function EditarUsuario() {
 
         <div>
           <label className="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-1">E-mail</label>
-          <input type="email" required value={formData.email} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl outline-xl outline-none font-bold text-slate-700" onChange={(e) => setFormData({...formData, email: e.target.value})} />
+          <input type="email" required value={formData.email} className="w-full p-4 bg-slate-50 border border-slate-200 rounded-xl outline-none font-bold text-slate-700" onChange={(e) => setFormData({...formData, email: e.target.value})} />
         </div>
 
         {/* CAMPO FORÇADO EM BLOCO VERTICAL */}
@@ -100,7 +111,7 @@ export default function EditarUsuario() {
           <input type="password" value={formData.senha} className="w-full p-4 bg-white border border-amber-200 rounded-xl outline-none font-bold text-slate-700 focus:ring-2 focus:ring-amber-500" placeholder="Deixe em branco para manter a atual" onChange={(e) => setFormData({...formData, senha: e.target.value})} />
         </div>
 
-        <button type="submit" disabled={saving} className="w-full bg-indigo-600 text-white font-black py-4 rounded-xl uppercase text-xs tracking-wider hover:bg-indigo-700 transition-all">
+        <button type="submit" disabled={saving} className="w-full bg-indigo-600 text-white font-black py-4 rounded-xl uppercase text-xs tracking-wider hover:bg-indigo-700 transition-all disabled:opacity-50">
           {saving ? 'Salvando...' : 'Salvar Alterações'}
         </button>
       </form>

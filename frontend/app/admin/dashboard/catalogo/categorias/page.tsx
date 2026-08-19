@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { API_URL } from '../../../../../lib/api'
 
 export default function GerenciarCategorias() {
   const [categorias, setCategorias] = useState([])
@@ -23,8 +24,8 @@ export default function GerenciarCategorias() {
     setLoading(true)
     const contextoLiga = slugLiga !== undefined ? slugLiga : obterSlugLigaContexto()
     const url = contextoLiga
-      ? `http://localhost:3000/produtos/categorias?liga=${contextoLiga}`
-      : process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/produtos/categorias'
+      ? `${API_URL}/produtos/categorias?liga=${contextoLiga}`
+      : `${API_URL}/produtos/categorias`
 
     fetch(url)
       .then(res => res.json())
@@ -44,7 +45,7 @@ export default function GerenciarCategorias() {
     if (!novaCategoria.trim()) return
     setLoading(true)
     
-    let url = process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/produtos/categorias'
+    let url = `${API_URL}/produtos/categorias`
     if (liga) url += `?liga=${liga}`
 
     await fetch(url, {
@@ -57,7 +58,10 @@ export default function GerenciarCategorias() {
   }
 
   const handleSalvarEdicao = async (id: number) => {
-    await fetch(`http://localhost:3000/produtos/categorias/${id}`, {
+    let url = `${API_URL}/produtos/categorias/${id}`
+    if (liga) url += `?liga=${liga}`
+
+    await fetch(url, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ nome: nomeEditado }),
@@ -68,7 +72,10 @@ export default function GerenciarCategorias() {
 
   const handleExcluir = async (id: number) => {
     if (!confirm('Excluir categoria?')) return
-    await fetch(`http://localhost:3000/produtos/categorias/${id}`, { method: 'DELETE' })
+    let url = `${API_URL}/produtos/categorias/${id}`
+    if (liga) url += `?liga=${liga}`
+
+    await fetch(url, { method: 'DELETE' })
     carregarCategorias(liga)
   }
 

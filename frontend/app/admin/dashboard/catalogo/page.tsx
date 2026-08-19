@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { API_URL } from '../../../../lib/api'
 
 export default function ListagemCatalogo() {
   const [itens, setItens] = useState([])
@@ -36,12 +37,12 @@ export default function ListagemCatalogo() {
       const contextoLiga = slugLiga !== undefined ? slugLiga : obterSlugLigaContexto()
       
       const urlProdutos = contextoLiga 
-        ? `http://localhost:3000/produtos?t=${Date.now()}&liga=${contextoLiga}`
-        : `http://localhost:3000/produtos?t=${Date.now()}`
+        ? `${API_URL}/produtos?t=${Date.now()}&liga=${contextoLiga}`
+        : `${API_URL}/produtos?t=${Date.now()}`
         
       const urlCategorias = contextoLiga
-        ? `http://localhost:3000/produtos/categorias?liga=${contextoLiga}`
-        : process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/produtos/categorias'
+        ? `${API_URL}/produtos/categorias?liga=${contextoLiga}`
+        : `${API_URL}/produtos/categorias`
 
       const [resItens, resCats] = await Promise.all([
         fetch(urlProdutos),
@@ -68,7 +69,7 @@ export default function ListagemCatalogo() {
     setAtualizandoId(id)
     try {
       const contextoLiga = obterSlugLigaContexto()
-      let url = `http://localhost:3000/produtos/${id}`
+      let url = `${API_URL}/produtos/${id}`
       if (contextoLiga) url += `?liga=${contextoLiga}`
 
       const res = await fetch(url, {
@@ -88,7 +89,7 @@ export default function ListagemCatalogo() {
 
   const handleExcluir = async (id: number) => {
     if (!confirm('Remover permanentemente?')) return
-    const res = await fetch(`http://localhost:3000/produtos/${id}`, { method: 'DELETE' })
+    const res = await fetch(`${API_URL}/produtos/${id}`, { method: 'DELETE' })
     if (res.ok) setItens(itens.filter((i: any) => i.id !== id))
   }
 
@@ -98,7 +99,7 @@ export default function ListagemCatalogo() {
   const totalCategorias = categorias.length
 
   const itensFiltrados = itens.filter((item: any) => {
-    const matchesBusca = item.nome.toLowerCase().includes(busca.toLowerCase())
+    const matchesBusca = item.nome?.toLowerCase().includes(busca.toLowerCase())
     const matchesCategoria = categoriaFiltrada === 'todas' || item.categoria?.id === Number(categoriaFiltrada)
     return matchesBusca && matchesCategoria
   })
@@ -198,7 +199,11 @@ export default function ListagemCatalogo() {
                   <td className="px-8 py-5">
                     <div className="flex items-center gap-4">
                       <div className="w-12 h-12 rounded-xl overflow-hidden border border-slate-100 bg-slate-50 shrink-0">
-                        <img src={`http://localhost:3000${item.imagem_p}`} className="w-full h-full object-cover" alt="" />
+                        <img 
+                          src={item.imagem_p ? (item.imagem_p.startsWith('http') ? item.imagem_p : `${API_URL}${item.imagem_p}`) : '/placeholder.png'} 
+                          className="w-full h-full object-cover" 
+                          alt="" 
+                        />
                       </div>
                       <div>
                         <p className="font-black text-slate-700 uppercase italic text-sm leading-tight truncate max-w-[200px]">{item.nome}</p>

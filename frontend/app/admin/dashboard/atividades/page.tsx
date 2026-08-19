@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { API_URL } from '../../../../lib/api'
 
 export default function ListaAtividades() {
   const router = useRouter()
@@ -26,10 +27,10 @@ export default function ListaAtividades() {
     setLoading(true)
     try {
       const liga = obterSlugLigaContexto()
-      // BLINDAGEM DO F5: Envia explicitamente o contexto da liga para o filtro no NestJS
+      // Envia explicitamente o contexto da liga para o filtro no NestJS
       const url = liga 
-        ? `http://localhost:3000/atividades?liga=${liga}` 
-        : process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/atividades'
+        ? `${API_URL}/atividades?liga=${liga}` 
+        : `${API_URL}/atividades`
 
       const res = await fetch(url)
       const data = await res.json()
@@ -45,7 +46,7 @@ export default function ListaAtividades() {
     if (!confirm("Deseja realmente excluir esta atividade? Isso não afetará os pontos já distribuídos.")) return
     
     try {
-      const res = await fetch(`http://localhost:3000/atividades/${id}`, { method: 'DELETE' })
+      const res = await fetch(`${API_URL}/atividades/${id}`, { method: 'DELETE' })
       if (res.ok) carregarAtividades()
     } catch (err) {
       alert("Erro ao excluir atividade.")
@@ -53,8 +54,8 @@ export default function ListaAtividades() {
   }
 
   const atividadesFiltradas = atividades.filter((at: any) => 
-    at.nome.toLowerCase().includes(busca.toLowerCase()) ||
-    at.status.toLowerCase().includes(busca.toLowerCase())
+    at.nome?.toLowerCase().includes(busca.toLowerCase()) ||
+    at.status?.toLowerCase().includes(busca.toLowerCase())
   )
 
   const liga = obterSlugLigaContexto()
@@ -109,7 +110,7 @@ export default function ListaAtividades() {
                     <div className="w-14 h-14 rounded-2xl overflow-hidden bg-slate-100 border border-slate-100 shrink-0 shadow-inner">
                       {ativ.imagem_p ? (
                         <img 
-                          src={`http://localhost:3000${ativ.imagem_p}`} 
+                          src={ativ.imagem_p.startsWith('http') ? ativ.imagem_p : `${API_URL}${ativ.imagem_p}`} 
                           className="w-full h-full object-cover"
                           alt={ativ.nome}
                         />

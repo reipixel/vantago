@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { API_URL } from '../../../lib/api'
 
 export default function RegistrarPontos() {
   const [associados, setAssociados] = useState([])
@@ -10,32 +11,50 @@ export default function RegistrarPontos() {
   const [atividadeId, setAtividadeId] = useState('')
   const [loading, setLoading] = useState(false)
 
+  const obterSlugLigaContexto = () => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      return params.get('liga')
+    }
+    return null
+  }
+
   useEffect(() => {
     fetchData()
   }, [])
 
   const fetchData = async () => {
     try {
+      const liga = obterSlugLigaContexto()
+      const urlAssoc = liga ? `${API_URL}/usuarios/associados?liga=${liga}` : `${API_URL}/usuarios/associados`
+      const urlAtiv = liga ? `${API_URL}/atividades?liga=${liga}` : `${API_URL}/atividades`
+
       const [resAssoc, resAtiv] = await Promise.all([
-        fetch(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/usuarios/associados'),
-        fetch(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/atividades')
+        fetch(urlAssoc),
+        fetch(urlAtiv)
       ])
-      setAssociados(await resAssoc.json())
-      setAtividades(await resAtiv.json())
+
+      const dataAssoc = await resAssoc.json()
+      const dataAtiv = await resAtiv.json()
+
+      setAssociados(Array.isArray(dataAssoc) ? dataAssoc : [])
+      setAtividades(Array.isArray(dataAtiv) ? dataAtiv : [])
     } catch (err) {
-      console.error("Erro ao carregar dados")
+      console.error("Erro ao carregar dados:", err)
+      setAssociados([])
+      setAtividades([])
     }
   }
 
   // Filtragem Associados
   const filtradosAssoc = associados.filter((a: any) => 
-    a.nome.toLowerCase().includes(buscaAssoc.toLowerCase()) || 
-    a.email.toLowerCase().includes(buscaAssoc.toLowerCase())
+    a.nome?.toLowerCase().includes(buscaAssoc.toLowerCase()) || 
+    a.email?.toLowerCase().includes(buscaAssoc.toLowerCase())
   )
 
   // Filtragem Atividades
   const filtradasAtiv = atividades.filter((at: any) => 
-    at.nome.toLowerCase().includes(buscaAtiv.toLowerCase())
+    at.nome?.toLowerCase().includes(buscaAtiv.toLowerCase())
   )
 
   const handleToggleUsuario = (id: number) => {
@@ -55,9 +74,16 @@ export default function RegistrarPontos() {
 
     setLoading(true)
     try {
-      const res = await fetch(`http://localhost:3000/atividades/registrar`, {
+      const liga = obterSlugLigaContexto()
+      let url = `${API_URL}/atividades/registrar`
+      if (liga) url += `?liga=${liga}`
+
+      const res = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          ...(liga ? { 'X-Organization-Slug': liga } : {})
+        },
         body: JSON.stringify({
           usuariosIds: idsSelecionados,
           atividadeId: Number(atividadeId)
@@ -70,9 +96,12 @@ export default function RegistrarPontos() {
         setAtividadeId('')
         setBuscaAssoc('')
         fetchData() // Atualiza os saldos na tela
+      } else {
+        const errData = await res.json()
+        alert(errData.message || "Erro ao registrar pontos.")
       }
     } catch (err) {
-      alert("Erro de conexão.")
+      alert("Erro de conexão com o servidor.")
     } finally {
       setLoading(false)
     }
@@ -130,7 +159,7 @@ export default function RegistrarPontos() {
                   
                   <div className="bg-white px-3 py-1.5 rounded-xl border border-slate-100 flex flex-col items-end min-w-[70px]">
                     <span className="text-[8px] font-black text-slate-300 uppercase tracking-widest">Saldo</span>
-                    <span className="text-xs font-black text-slate-600">{Number(a.saldo_pontos).toLocaleString('pt-BR')}</span>
+                    <span className="text-xs font-black text-slate-600">{Number(a.saldo_pontos || 0).toLocaleString('pt-BR')}</span>
                   </div>
                 </button>
               ))}

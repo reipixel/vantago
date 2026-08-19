@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
+import { API_URL } from '../../../../lib/api'
 
 export default function GestaoAssociados() {
   const [associados, setAssociados] = useState<any[]>([])
@@ -45,8 +46,8 @@ export default function GestaoAssociados() {
     try {
       const liga = obterSlugLigaContexto()
       const url = liga 
-        ? `http://localhost:3000/usuarios?liga=${liga}` 
-        : process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/usuarios'
+        ? `${API_URL}/usuarios?liga=${liga}` 
+        : `${API_URL}/usuarios`
 
       const res = await fetch(url)
       const data = await res.json()
@@ -80,7 +81,7 @@ export default function GestaoAssociados() {
 
     setSaving(true)
     const liga = obterSlugLigaContexto()
-    let url = userForm.id ? `http://localhost:3000/usuarios/${userForm.id}` : process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/usuarios'
+    let url = userForm.id ? `${API_URL}/usuarios/${userForm.id}` : `${API_URL}/usuarios`
     if (liga) {
       url += url.includes('?') ? `&liga=${liga}` : `?liga=${liga}`
     }
@@ -116,7 +117,7 @@ export default function GestaoAssociados() {
 
   const handleExcluir = async (id: number) => {
     if (!confirm("Excluir este associado permanentemente?")) return
-    await fetch(`http://localhost:3000/usuarios/${id}`, { method: 'DELETE' })
+    await fetch(`${API_URL}/usuarios/${id}`, { method: 'DELETE' })
     carregarAssociados()
   }
 
@@ -132,7 +133,7 @@ export default function GestaoAssociados() {
 
     setSaving(true)
     try {
-      const res = await fetch(`http://localhost:3000/usuarios/${userSelecionado.id}/pontos`, {
+      const res = await fetch(`${API_URL}/usuarios/${userSelecionado.id}/pontos`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ valor: Number(ajuste.valor), motivo: ajuste.motivo })
@@ -153,8 +154,8 @@ export default function GestaoAssociados() {
   }
 
   const associadosFiltrados = associados.filter((a: any) => 
-    a.nome.toLowerCase().includes(busca.toLowerCase()) || 
-    a.email.toLowerCase().includes(busca.toLowerCase())
+    a.nome?.toLowerCase().includes(busca.toLowerCase()) || 
+    a.email?.toLowerCase().includes(busca.toLowerCase())
   )
 
   return (

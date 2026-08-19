@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { API_URL } from '../../lib/api'
 
 export default function LoginAdmin() {
   const router = useRouter()
@@ -14,7 +15,7 @@ export default function LoginAdmin() {
     setLoading(true)
 
     try {
-      const res = await fetch(process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/usuarios/login-admin', {
+      const res = await fetch(`${API_URL}/usuarios/login-admin`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ identificador, senha })

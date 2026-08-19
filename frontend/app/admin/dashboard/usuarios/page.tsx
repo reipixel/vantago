@@ -1,6 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { API_URL } from '../../../../lib/api'
 
 export default function ListaUsuarios() {
   const [usuarios, setUsuarios] = useState([])
@@ -21,8 +22,8 @@ export default function ListaUsuarios() {
     setLiga(slugDetectado)
 
     const url = slugDetectado
-      ? `http://localhost:3000/usuarios?liga=${slugDetectado}`
-      : process.env.NEXT_PUBLIC_API_URL || 'https://goldenrod-magpie-257392.hostingersite.com/usuarios'
+      ? `${API_URL}/usuarios?liga=${slugDetectado}`
+      : `${API_URL}/usuarios`
 
     fetch(url)
       .then(res => res.json())
@@ -32,6 +33,7 @@ export default function ListaUsuarios() {
       })
       .catch(err => {
         console.error("Erro ao carregar associados:", err)
+        setUsuarios([])
         setLoading(false)
       })
   }, [])
@@ -45,18 +47,23 @@ export default function ListaUsuarios() {
   const excluirUsuario = async (id: number, nome: string) => {
     if (confirm(`Tem certeza que deseja excluir o associado ${nome}?`)) {
       try {
-        let url = `http://localhost:3000/usuarios/${id}`
+        let url = `${API_URL}/usuarios/${id}`
         if (liga) url += `?liga=${liga}`
 
         const res = await fetch(url, {
           method: 'DELETE',
+          headers: {
+            ...(liga ? { 'X-Organization-Slug': liga } : {})
+          }
         });
 
         if (res.ok) {
           setUsuarios(usuarios.filter((u: any) => u.id !== id));
+        } else {
+          alert("Erro ao excluir usuário.");
         }
       } catch (error) {
-        alert("Erro ao excluir usuário.");
+        alert("Erro de conexão ao excluir usuário.");
       }
     }
   }
