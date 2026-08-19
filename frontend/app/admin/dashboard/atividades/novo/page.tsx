@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
-import { API_URL } from '../../../../../lib/api'
+import { API_URL } from '@/app/lib/api'
 
 // Editor compatível com React 18/19
 import 'react-quill-new/dist/quill.snow.css'

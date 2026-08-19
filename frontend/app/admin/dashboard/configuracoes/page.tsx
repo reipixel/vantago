@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
-import { API_URL } from '../../../../lib/api'
+import { API_URL } from '@/app/lib/api'
 
 function ConfiguracoesConteudo() {
   const searchParams = useSearchParams()

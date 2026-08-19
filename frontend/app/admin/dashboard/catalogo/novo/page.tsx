@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react'
 import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { API_URL } from '../../../../../lib/api'
+import { API_URL } from '@/app/lib/api'
 
 // CSS do Editor
 import 'react-quill-new/dist/quill.snow.css'

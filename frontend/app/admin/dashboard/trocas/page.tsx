@@ -1,6 +1,6 @@
 'use client'
 import { useEffect, useState } from 'react'
-import { API_URL } from '../../../lib/api'
+import { API_URL } from '@/app/lib/api'
 
 export default function AdminGerenciarTrocas() {
   const [trocas, setTrocas] = useState([])

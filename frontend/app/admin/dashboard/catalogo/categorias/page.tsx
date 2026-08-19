@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { API_URL } from '../../../../../lib/api'
+import { API_URL } from '@/app/lib/api'
 
 export default function GerenciarCategorias() {
   const [categorias, setCategorias] = useState([])

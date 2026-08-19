@@ -1,7 +1,7 @@
 'use client'
 import { useEffect, useState } from 'react'
 import { useRouter, useParams } from 'next/navigation'
-import { API_URL } from '../../../../../../lib/api'
+import { API_URL } from '@/app/lib/api'
 
 export default function EditarUsuario() {
   const router = useRouter()

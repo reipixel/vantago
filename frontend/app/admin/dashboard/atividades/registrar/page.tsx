@@ -1,6 +1,6 @@
 'use client'
 import { useState, useEffect } from 'react'
-import { API_URL } from '../../../../../lib/api'
+import { API_URL } from '@/app/lib/api'
 
 export default function RegistrarPontos() {
   const [usuarios, setUsuarios] = useState([])

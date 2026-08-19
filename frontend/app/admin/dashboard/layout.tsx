@@ -2,7 +2,7 @@
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState, Suspense } from 'react'
-import { API_URL } from '../../lib/api'
+import { API_URL } from '@/app/lib/api'
 
 function DashboardLayoutConteudo({ children }: { children: React.ReactNode }) {
   const router = useRouter()

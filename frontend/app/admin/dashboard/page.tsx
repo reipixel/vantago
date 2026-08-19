@@ -2,7 +2,7 @@
 import { useEffect, useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { API_URL } from '../../lib/api'
+import { API_URL } from '@/app/lib/api'
 
 function DashboardConteudo() {
   const searchParams = useSearchParams()
@@ -90,7 +90,7 @@ function DashboardConteudo() {
 
     } catch (err) {
       console.error("Erro crítico no dashboard:", err);
-    } fontally {
+    } finally {
       setLoading(false);
     }
   };

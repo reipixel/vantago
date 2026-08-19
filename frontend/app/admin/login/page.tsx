@@ -1,7 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { API_URL } from '../../lib/api'
+import { API_URL } from '@/app/lib/api'
 
 export default function LoginAdmin() {
   const router = useRouter()
