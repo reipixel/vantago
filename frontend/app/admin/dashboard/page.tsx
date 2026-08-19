@@ -18,17 +18,25 @@ function DashboardConteudo() {
   const [pedidos, setPedidos] = useState([])
   const [atividades, setAtividades] = useState([])
   const [loading, setLoading] = useState(true)
+  
+  // Estado para armazenar o slug real da entidade para a URL do portal
+  const [slugEntidade, setSlugEntidade] = useState<string>('')
+  const [baseUrl, setBaseUrl] = useState<string>('')
 
   useEffect(() => {
+    // Captura o domínio base atual (ex: https://enderecodosite.com.br)
+    if (typeof window !== 'undefined') {
+      setBaseUrl(window.location.origin)
+    }
+
     carregarDadosDashboard()
-  }, [slugLiga]) // Recarrega sempre que o contexto da liga mudar
+  }, [slugLiga])
 
   const carregarDadosDashboard = async () => {
     setLoading(true)
     try {
       const fetchDados = async (url: string) => {
         try {
-          // Adiciona o parâmetro de liga na URL se ele existir no contexto
           const urlComContexto = slugLiga 
             ? `${url}${url.includes('?') ? '&' : '?'}liga=${slugLiga}` 
             : url;
@@ -36,7 +44,6 @@ function DashboardConteudo() {
           const res = await fetch(urlComContexto, {
             headers: {
               'Content-Type': 'application/json',
-              // Também envia como header customizado por garantia na interceptação multi-tenant do Backend
               ...(slugLiga ? { 'X-Organization-Slug': slugLiga } : {})
             }
           });
@@ -44,19 +51,25 @@ function DashboardConteudo() {
           return await res.json();
         } catch (e) {
           console.error(`Erro na rota ${url}:`, e);
-          return [];
+          return null;
         }
       };
 
-      const [usuariosRaw, todosPedidosRaw, atividadesRaw] = await Promise.all([
+      const [usuariosRaw, todosPedidosRaw, atividadesRaw, configRaw] = await Promise.all([
         fetchDados(`${API_URL}/usuarios`),
         fetchDados(`${API_URL}/produtos/pedidos`),
-        fetchDados(`${API_URL}/atividades`)
+        fetchDados(`${API_URL}/atividades`),
+        fetchDados(`${API_URL}/configuracoes/1`)
       ]);
 
       const usuarios = Array.isArray(usuariosRaw) ? usuariosRaw : [];
       const todosPedidos = Array.isArray(todosPedidosRaw) ? todosPedidosRaw : [];
       const listaAtividades = Array.isArray(atividadesRaw) ? atividadesRaw : [];
+
+      // Identifica o slug da entidade:
+      // Se houver slugLiga via SuperAdmin na URL, usa ele. Caso contrário, busca do configRaw ou fallback do retorno
+      const slugDetectado = slugLiga || configRaw?.slug || configRaw?.nome_liga?.toLowerCase().replace(/\s+/g, '-') || '';
+      setSlugEntidade(slugDetectado);
 
       const agora = new Date();
       const primeiroDiaMes = new Date(agora.getFullYear(), agora.getMonth(), 1);
@@ -110,8 +123,10 @@ function DashboardConteudo() {
     } catch (err) { alert("Erro ao atualizar") }
   }
 
-  // Define a URL para o painel do associado correspondente
-  const urlPainelAssociado = slugLiga ? `/${slugLiga}` : '/'
+  // Monta a URL completa e absoluta para o Portal do Associado
+  const urlPortalAssociado = slugEntidade 
+    ? `${baseUrl}/${slugEntidade}` 
+    : baseUrl || '/';
 
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700">
@@ -199,9 +214,9 @@ function DashboardConteudo() {
           <i className="fas fa-exchange-alt"></i> Ver Trocas
         </Link>
 
-        {/* BOTÃO PARA O PAINEL DO ASSOCIADO (ABRE EM NOVA GUIA) */}
+        {/* BOTÃO PARA O PAINEL DO ASSOCIADO (LINK DINÂMICO COM SLUG DA ENTIDADE EM NOVA GUIA) */}
         <a 
-          href={urlPainelAssociado} 
+          href={urlPortalAssociado} 
           target="_blank" 
           rel="noopener noreferrer" 
           className="bg-emerald-600 text-white px-6 py-3 rounded-lg text-[10px] font-black uppercase tracking-[2px] hover:bg-emerald-700 transition flex items-center gap-2 shadow-sm"
