@@ -112,21 +112,25 @@ function ConfiguracoesConteudo() {
 
   const carregarAdmins = async () => {
     try {
-      // Chama a rota geral de usuários (que respeita o isolamento da liga) 
-      // em vez da rota '/usuarios/admins' que lista os Super Admins
       const res = await fetch(formatarUrl(`${API_URL}/usuarios`), {
         headers: obterHeaders()
       })
       const data = await res.json()
       
       if (Array.isArray(data)) {
-        // Filtra para manter apenas os usuários que são do tipo admin pertencentes a esta liga
-        const adminsDaLiga = data.filter((u: any) => u.tipo === 'admin')
+        // Aceita variações de caixa (maiúscula/minúscula) ou roles da API
+        const adminsDaLiga = data.filter((u: any) => 
+          u.tipo?.toLowerCase() === 'admin' || 
+          u.role?.toLowerCase() === 'admin' ||
+          u.tipo?.toLowerCase() === 'administrador'
+        )
         setUsuarios(adminsDaLiga)
       } else {
         setUsuarios([])
       }
-    } catch (err) { console.error(err) }
+    } catch (err) { 
+      console.error("Erro ao carregar administradores:", err) 
+    }
   }
 
   const handleSalvarConfig = async (e: React.FormEvent, dados: any) => {
@@ -150,7 +154,8 @@ function ConfiguracoesConteudo() {
       
       const payload: any = { 
         ...userForm,
-        // Garante que o novo admin seja vinculado à entidade correspondente
+        tipo: 'admin',
+        role: 'admin',
         ...(slugLiga ? { liga: slugLiga } : {})
       }
       if (userForm.id && !userForm.senha.trim()) {
@@ -162,15 +167,20 @@ function ConfiguracoesConteudo() {
         headers: obterHeaders(),
         body: JSON.stringify(payload)
       })
+
       if (res.ok) {
         setShowModalUser(false)
-        carregarAdmins()
+        await carregarAdmins() // Recarrega a listagem de administradores
         alert('✅ Administrador salvo com sucesso!')
       } else {
         const errData = await res.json()
         alert(errData.message || "Erro ao salvar administrador.")
       }
-    } catch (err) { alert("Erro na API.") } finally { setSaving(false) }
+    } catch (err) { 
+      alert("Erro na API.") 
+    } finally { 
+      setSaving(false) 
+    }
   }
 
   const handleExcluirUser = async (id: number) => {
