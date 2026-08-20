@@ -1,13 +1,15 @@
 'use client'
 import { useEffect, useState, Suspense } from 'react'
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { API_URL } from '@/app/lib/api'
 
 function DashboardConteudo() {
+  const router = useRouter()
   const searchParams = useSearchParams()
-  const slugLiga = searchParams.get('liga') // Captura "liga-fiel" da URL caso venha do SuperAdmin
+  const slugLiga = searchParams.get('liga')
 
+  const [autenticado, setAutenticado] = useState(false)
   const [stats, setStats] = useState({
     totalAssociados: 0,
     novosMes: 0,
@@ -18,32 +20,44 @@ function DashboardConteudo() {
   const [pedidos, setPedidos] = useState([])
   const [atividades, setAtividades] = useState([])
   const [loading, setLoading] = useState(true)
-  
-  // Estado para armazenar o slug real da entidade para a URL do portal
+
   const [slugEntidade, setSlugEntidade] = useState<string>('')
   const [baseUrl, setBaseUrl] = useState<string>('')
 
+  // PROTEÇÃO DE ROTA: Verifica se existe o token do Admin
   useEffect(() => {
-    // Captura o domínio base atual (ex: https://enderecodosite.com.br)
     if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('token') || localStorage.getItem('admin_token')
+      
+      if (!token) {
+        // Redireciona para o login de admin caso não esteja autenticado
+        router.replace('/admin/login')
+        return
+      }
+      
+      setAutenticado(true)
       setBaseUrl(window.location.origin)
     }
+  }, [router])
 
-    carregarDadosDashboard()
-  }, [slugLiga])
+  useEffect(() => {
+    if (autenticado) {
+      carregarDadosDashboard()
+    }
+  }, [autenticado, slugLiga])
 
   const carregarDadosDashboard = async () => {
     setLoading(true)
     try {
+      const token = localStorage.getItem('token') || localStorage.getItem('admin_token')
       const fetchDados = async (url: string) => {
         try {
-          const urlComContexto = slugLiga 
-            ? `${url}${url.includes('?') ? '&' : '?'}liga=${slugLiga}` 
-            : url;
+          const urlComContexto = `${url}${url.includes('?') ? '&' : '?'}t=${Date.now()}${slugLiga ? `&liga=${slugLiga}` : ''}`;
 
           const res = await fetch(urlComContexto, {
             headers: {
               'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
               ...(slugLiga ? { 'X-Organization-Slug': slugLiga } : {})
             }
           });
@@ -66,15 +80,12 @@ function DashboardConteudo() {
       const todosPedidos = Array.isArray(todosPedidosRaw) ? todosPedidosRaw : [];
       const listaAtividades = Array.isArray(atividadesRaw) ? atividadesRaw : [];
 
-      // Identifica o slug da entidade:
-      // Se houver slugLiga via SuperAdmin na URL, usa ele. Caso contrário, busca do configRaw ou fallback do retorno
       const slugDetectado = slugLiga || configRaw?.slug || configRaw?.nome_liga?.toLowerCase().replace(/\s+/g, '-') || '';
       setSlugEntidade(slugDetectado);
 
       const agora = new Date();
       const primeiroDiaMes = new Date(agora.getFullYear(), agora.getMonth(), 1);
 
-      // Cálculos
       const novos = usuarios.filter((u: any) => {
         const data = new Date(u.data_criacao || u.createdAt || agora);
         return data >= primeiroDiaMes;
@@ -102,7 +113,7 @@ function DashboardConteudo() {
       setAtividades(listaAtividades.slice(0, 2));
 
     } catch (err) {
-      console.error("Erro crítico no dashboard:", err);
+      console.error("Erro no dashboard:", err);
     } finally {
       setLoading(false);
     }
@@ -111,10 +122,12 @@ function DashboardConteudo() {
   const handleStatusTroca = async (id: number, novoStatus: string) => {
     if (!confirm(`Deseja alterar o status para ${novoStatus}?`)) return
     try {
+      const token = localStorage.getItem('token') || localStorage.getItem('admin_token')
       const res = await fetch(`${API_URL}/produtos/pedidos/${id}/status`, {
         method: 'PATCH',
         headers: { 
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`,
           ...(slugLiga ? { 'X-Organization-Slug': slugLiga } : {})
         },
         body: JSON.stringify({ status: novoStatus })
@@ -123,15 +136,19 @@ function DashboardConteudo() {
     } catch (err) { alert("Erro ao atualizar") }
   }
 
-  // Monta a URL completa e absoluta para o Portal do Associado
-  const urlPortalAssociado = slugEntidade 
-    ? `${baseUrl}/${slugEntidade}` 
-    : baseUrl || '/';
+  if (!autenticado) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white font-black uppercase tracking-widest text-xs">
+        Verificando credenciais de acesso...
+      </div>
+    )
+  }
+
+  const urlPortalAssociado = slugEntidade ? `${baseUrl}/${slugEntidade}` : baseUrl || '/';
 
   return (
     <div className="p-6 md:p-8 max-w-7xl mx-auto space-y-8 animate-in fade-in duration-700">
       
-      {/* IDENTIFICADOR VISUAL DO CONTEXTO MULTI-TENANT */}
       {slugLiga && (
         <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -146,7 +163,6 @@ function DashboardConteudo() {
         </div>
       )}
       
-      {/* 1. INDICADORES INTEGRADOS */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white p-5 rounded-xl shadow-sm border border-gray-100 transition-all hover:border-indigo-100">
           <div className="flex justify-between items-start">
@@ -199,7 +215,6 @@ function DashboardConteudo() {
         </div>
       </div>
 
-      {/* 2. ACESSO RÁPIDO */}
       <div className="flex flex-wrap gap-3">
         <Link href={slugLiga ? `/admin/dashboard/usuarios/novo?liga=${slugLiga}` : "/admin/dashboard/usuarios/novo"} className="bg-slate-800 text-white px-6 py-3 rounded-lg text-[10px] font-black uppercase tracking-[2px] hover:bg-slate-900 transition flex items-center gap-2">
           <i className="fas fa-user-plus"></i> Novo Associado
@@ -214,7 +229,6 @@ function DashboardConteudo() {
           <i className="fas fa-exchange-alt"></i> Ver Trocas
         </Link>
 
-        {/* BOTÃO PARA O PAINEL DO ASSOCIADO (LINK DINÂMICO COM SLUG DA ENTIDADE EM NOVA GUIA) */}
         <a 
           href={urlPortalAssociado} 
           target="_blank" 
@@ -225,7 +239,6 @@ function DashboardConteudo() {
         </a>
       </div>
 
-      {/* 3. SOLICITAÇÕES E ATIVIDADES */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="p-5 border-b border-gray-50 bg-gray-50/30 flex justify-between items-center">
@@ -271,7 +284,6 @@ function DashboardConteudo() {
           </div>
         </div>
 
-        {/* COLUNA DE ATIVIDADES DINÂMICA */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="p-5 border-b border-gray-50 bg-gray-50/30">
             <h3 className="font-bold text-slate-800 italic uppercase text-sm tracking-tight flex items-center gap-2">

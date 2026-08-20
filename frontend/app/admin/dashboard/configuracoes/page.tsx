@@ -1,12 +1,14 @@
 'use client'
 import { useState, useEffect, Suspense } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { API_URL } from '@/app/lib/api'
 
 function ConfiguracoesConteudo() {
+  const router = useRouter()
   const searchParams = useSearchParams()
-  const slugLiga = searchParams.get('liga') // Captura dinamicamente o contexto (ex: "liga-fiel")
+  const slugLiga = searchParams.get('liga')
 
+  const [autenticado, setAutenticado] = useState(false)
   const [abaAtiva, setAbaAtiva] = useState<'identidade' | 'usuarios' | 'gamificacao'>('identidade')
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -15,7 +17,6 @@ function ConfiguracoesConteudo() {
   const [produtosCatalogo, setProdutosCatalogo] = useState([])
   const [categorias, setCategorias] = useState([])
 
-  // --- ESTADOS ABA 1: IDENTIDADE ---
   const [identidade, setIdentidade] = useState({
     nome_entidade: '',
     nome_liga: '',
@@ -23,14 +24,12 @@ function ConfiguracoesConteudo() {
     telefone: ''
   })
 
-  // --- ESTADOS ABA 2: USUÁRIOS ---
-  const [usuarios, setUsuarios] = useState([])
+  const [usuarios, setUsuarios] = useState<any[]>([])
   const [showModalUser, setShowModalUser] = useState(false)
   const [userForm, setUserForm] = useState({ 
     id: null, nome: '', login: '', email: '', senha: '', tipo: 'admin' 
   })
 
-  // --- ESTADOS ABA 3: GAMIFICAÇÃO ---
   const [pontosConfig, setPontosConfig] = useState({
     pontos_perfil: 50,
     pontos_endereco: 100,
@@ -40,30 +39,50 @@ function ConfiguracoesConteudo() {
     sugestao_3_id: ''
   })
 
-  // Filtros para a busca de itens nas sugestões
   const [buscaItem, setBuscaItem] = useState('')
   const [catFiltro, setCatFiltro] = useState('todas')
 
-  // Helper para injetar os headers multi-tenant obrigatórios
-  const obterHeaders = () => ({
-    'Content-Type': 'application/json',
-    ...(slugLiga ? { 'X-Organization-Slug': slugLiga } : {})
-  })
+  // PROTEÇÃO DE ROTA
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('token') || localStorage.getItem('admin_token')
+      if (!token) {
+        router.replace('/admin/login')
+        return
+      }
+      setAutenticado(true)
+    }
+  }, [router])
 
-  // Helper para injetar a query string de liga nas URLs da API
+  const obterHeaders = () => {
+    const token = typeof window !== 'undefined' ? (localStorage.getItem('token') || localStorage.getItem('admin_token')) : ''
+    return {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+      ...(slugLiga ? { 'X-Organization-Slug': slugLiga } : {})
+    }
+  }
+
+  // Previne Cache HTTP nas requisições da API
   const formatarUrl = (urlBase: string) => {
-    if (!slugLiga) return urlBase
-    return `${urlBase}${urlBase.includes('?') ? '&' : '?'}liga=${slugLiga}`
+    const timestamp = `t=${Date.now()}`
+    const ligaParam = slugLiga ? `liga=${slugLiga}` : ''
+    const concat = urlBase.includes('?') ? '&' : '?'
+    return `${urlBase}${concat}${timestamp}${ligaParam ? `&${ligaParam}` : ''}`
   }
 
   useEffect(() => {
-    carregarDadosBase()
-  }, [])
+    if (autenticado) {
+      carregarDadosBase()
+    }
+  }, [autenticado])
 
   useEffect(() => {
-    if (abaAtiva === 'identidade' || abaAtiva === 'gamificacao') carregarIdentidade()
-    if (abaAtiva === 'usuarios') carregarAdmins()
-  }, [abaAtiva, slugLiga])
+    if (autenticado) {
+      if (abaAtiva === 'identidade' || abaAtiva === 'gamificacao') carregarIdentidade()
+      if (abaAtiva === 'usuarios') carregarAdmins()
+    }
+  }, [abaAtiva, slugLiga, autenticado])
 
   const carregarDadosBase = async () => {
     try {
@@ -118,8 +137,9 @@ function ConfiguracoesConteudo() {
       const data = await res.json()
       
       if (Array.isArray(data)) {
-        // Aceita variações de caixa (maiúscula/minúscula) ou roles da API
+        // Aceita variadas nomenclaturas do backend
         const adminsDaLiga = data.filter((u: any) => 
+          !u.tipo || 
           u.tipo?.toLowerCase() === 'admin' || 
           u.role?.toLowerCase() === 'admin' ||
           u.tipo?.toLowerCase() === 'administrador'
@@ -169,8 +189,17 @@ function ConfiguracoesConteudo() {
       })
 
       if (res.ok) {
+        const adminCriadoOuAtualizado = await res.json()
         setShowModalUser(false)
-        await carregarAdmins() // Recarrega a listagem de administradores
+        
+        // Atualização Otimista Local: Insere o novo usuário imediatamente na lista
+        if (!userForm.id && adminCriadoOuAtualizado?.id) {
+          setUsuarios(prev => [adminCriadoOuAtualizado, ...prev])
+        } else if (!userForm.id) {
+          setUsuarios(prev => [{ ...payload, id: Date.now() }, ...prev])
+        }
+
+        await carregarAdmins() // Atualiza no servidor
         alert('✅ Administrador salvo com sucesso!')
       } else {
         const errData = await res.json()
@@ -189,7 +218,16 @@ function ConfiguracoesConteudo() {
       method: 'DELETE',
       headers: obterHeaders()
     })
+    setUsuarios(prev => prev.filter(u => u.id !== id))
     carregarAdmins()
+  }
+
+  if (!autenticado) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-900 text-white font-black uppercase tracking-widest text-xs">
+        Verificando permissões...
+      </div>
+    )
   }
 
   const ItemSelector = ({ label, value, onChange, highlight = false }: any) => {
@@ -236,7 +274,6 @@ function ConfiguracoesConteudo() {
         )}
       </div>
 
-      {/* Tabs */}
       <div className="flex gap-2 mb-10 bg-slate-100 p-1.5 rounded-[22px] w-fit border border-slate-200/50">
         <button type="button" onClick={() => setAbaAtiva('identidade')} className={`px-8 py-3.5 rounded-2xl font-bold text-sm transition-all ${abaAtiva === 'identidade' ? 'bg-white text-slate-800 shadow-md' : 'text-slate-500'}`}>
           <i className="fas fa-building mr-2 opacity-50"></i> Identidade
@@ -255,7 +292,6 @@ function ConfiguracoesConteudo() {
         </div>
       ) : (
         <div className="space-y-6">
-          {/* ABA IDENTIDADE */}
           {abaAtiva === 'identidade' && (
             <form onSubmit={(e) => handleSalvarConfig(e, identidade)} className="animate-in slide-in-from-bottom-4 duration-500">
               <div className="bg-white p-10 rounded-[40px] border border-slate-100 shadow-sm space-y-8">
@@ -286,7 +322,6 @@ function ConfiguracoesConteudo() {
             </form>
           )}
 
-          {/* ABA GAMIFICAÇÃO */}
           {abaAtiva === 'gamificacao' && (
             <form onSubmit={(e) => handleSalvarConfig(e, pontosConfig)} className="animate-in slide-in-from-bottom-4 duration-500 space-y-8">
               <div className="bg-white p-10 rounded-[40px] border border-slate-100 shadow-sm space-y-10">
@@ -349,7 +384,6 @@ function ConfiguracoesConteudo() {
             </form>
           )}
 
-          {/* ABA USUÁRIOS */}
           {abaAtiva === 'usuarios' && (
             <div className="space-y-6 animate-in slide-in-from-bottom-4 duration-500">
               <div className="flex justify-between items-center bg-white p-8 rounded-[32px] border border-slate-100 shadow-sm">
@@ -383,7 +417,6 @@ function ConfiguracoesConteudo() {
         </div>
       )}
 
-      {/* MODAL ADMIN */}
       {showModalUser && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md z-50 flex items-center justify-center p-6">
           <form onSubmit={handleSalvarUser} className="bg-white w-full max-w-md rounded-[40px] p-10 shadow-2xl animate-in zoom-in-95 duration-300">
