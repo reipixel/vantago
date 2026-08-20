@@ -112,11 +112,20 @@ function ConfiguracoesConteudo() {
 
   const carregarAdmins = async () => {
     try {
-      const res = await fetch(formatarUrl(`${API_URL}/usuarios/admins`), {
+      // Chama a rota geral de usuários (que respeita o isolamento da liga) 
+      // em vez da rota '/usuarios/admins' que lista os Super Admins
+      const res = await fetch(formatarUrl(`${API_URL}/usuarios`), {
         headers: obterHeaders()
       })
       const data = await res.json()
-      setUsuarios(Array.isArray(data) ? data : [])
+      
+      if (Array.isArray(data)) {
+        // Filtra para manter apenas os usuários que são do tipo admin pertencentes a esta liga
+        const adminsDaLiga = data.filter((u: any) => u.tipo === 'admin')
+        setUsuarios(adminsDaLiga)
+      } else {
+        setUsuarios([])
+      }
     } catch (err) { console.error(err) }
   }
 
@@ -139,7 +148,11 @@ function ConfiguracoesConteudo() {
     try {
       const urlBase = userForm.id ? `${API_URL}/usuarios/${userForm.id}` : `${API_URL}/usuarios`
       
-      const payload: any = { ...userForm }
+      const payload: any = { 
+        ...userForm,
+        // Garante que o novo admin seja vinculado à entidade correspondente
+        ...(slugLiga ? { liga: slugLiga } : {})
+      }
       if (userForm.id && !userForm.senha.trim()) {
         delete payload.senha
       }
