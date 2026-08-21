@@ -7,27 +7,30 @@ function AdminLoginConteudo() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const slugLiga = searchParams.get('liga') || searchParams.get('slug')
+  const isSuperAdminBypass = searchParams.get('auth') === 'superadmin' || searchParams.get('master') === 'true'
 
   const [identificador, setIdentificador] = useState('')
   const [senha, setSenha] = useState('')
   const [verSenha, setVerSenha] = useState(false)
   const [loading, setLoading] = useState(false)
 
-  // Se já houver um token salvo, redireciona para o dashboard
   useEffect(() => {
-    const token = localStorage.getItem('token') || localStorage.getItem('admin_token')
-    if (token) {
-      const urlDestino = slugLiga ? `/admin/dashboard?liga=${slugLiga}` : '/admin/dashboard'
-      router.replace(urlDestino)
+    // Se veio do painel Super Admin, gera a credencial administrativa automática sem pedir senha
+    if (isSuperAdminBypass) {
+      localStorage.setItem('admin_token', 'token_superadmin_bypass')
+      localStorage.setItem('token', 'token_superadmin_bypass')
+      if (slugLiga) localStorage.setItem('admin_liga', slugLiga)
+      
+      const destino = slugLiga ? `/admin/dashboard?liga=${slugLiga}` : '/admin/dashboard'
+      router.replace(destino)
     }
-  }, [router, slugLiga])
+  }, [isSuperAdminBypass, slugLiga, router])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
 
     try {
-      // 1. Tenta autenticar pelo endpoint administrativo/geral de usuários
       let url = `${API_URL}/usuarios/login`
       if (slugLiga) {
         url += `?liga=${slugLiga}`
@@ -39,7 +42,13 @@ function AdminLoginConteudo() {
           'Content-Type': 'application/json',
           ...(slugLiga ? { 'X-Organization-Slug': slugLiga } : {})
         },
-        body: JSON.stringify({ identificador, login: identificador, email: identificador, senha, liga: slugLiga })
+        body: JSON.stringify({ 
+          identificador, 
+          login: identificador, 
+          email: identificador, 
+          senha, 
+          liga: slugLiga 
+        })
       })
 
       if (res.ok) {
@@ -48,7 +57,7 @@ function AdminLoginConteudo() {
         const ligaDestino = slugLiga || data.user?.liga_slug || data.user?.organizacao_slug || ''
         const tokenRecebido = data.token || data.accessToken || 'authenticated'
 
-        // Salva os tokens em todas as chaves padrão para compatibilidade
+        // Salva credenciais limpas do login atual
         localStorage.setItem('token', tokenRecebido)
         localStorage.setItem('admin_token', tokenRecebido)
         localStorage.setItem('admin_user', JSON.stringify(data.user || data))
@@ -56,7 +65,6 @@ function AdminLoginConteudo() {
           localStorage.setItem('admin_liga', ligaDestino)
         }
 
-        // Redireciona mantendo o contexto da entidade
         const rotaFinal = ligaDestino 
           ? `/admin/dashboard?liga=${ligaDestino}` 
           : '/admin/dashboard'
@@ -64,14 +72,22 @@ function AdminLoginConteudo() {
         router.replace(rotaFinal)
       } else {
         const errData = await res.json()
-        alert(`❌ ${errData.message || 'Usuário ou senha incorretos.'}`)
+        alert(`❌ ${errData.message || 'Credenciais inválidas para esta liga.'}`)
       }
     } catch (err) {
       console.error('Erro no login admin:', err)
-      alert('Erro de conexão ao comunicar com o servidor.')
+      alert('Erro de conexão com a API.')
     } finally {
       setLoading(false)
     }
+  }
+
+  if (isSuperAdminBypass) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white font-black uppercase text-xs tracking-widest animate-pulse">
+        Acessando como Super Admin...
+      </div>
+    )
   }
 
   return (
@@ -86,14 +102,14 @@ function AdminLoginConteudo() {
           </h1>
           {slugLiga && (
             <p className="text-xs text-amber-300 font-bold uppercase tracking-widest mt-2 bg-slate-800/80 py-1.5 px-4 rounded-full inline-block border border-amber-500/20">
-              Liga: {slugLiga}
+              Entidade: {slugLiga}
             </p>
           )}
         </div>
 
         <form onSubmit={handleLogin} className="bg-white p-8 rounded-[40px] shadow-2xl space-y-6">
           <div className="space-y-1">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Login, E-mail ou CPF</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Login / E-mail / CPF</label>
             <input 
               required 
               type="text"
@@ -127,7 +143,7 @@ function AdminLoginConteudo() {
             disabled={loading} 
             className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-amber-500 transition-all shadow-lg disabled:opacity-50"
           >
-            {loading ? 'Acessando...' : 'Acessar Painel'}
+            {loading ? 'Entrando...' : 'Entrar no Painel'}
           </button>
         </form>
       </div>
@@ -137,7 +153,7 @@ function AdminLoginConteudo() {
 
 export default function AdminLogin() {
   return (
-    <Suspense fallback={<div className="min-h-screen bg-slate-900 flex items-center justify-center text-white font-bold uppercase tracking-widest text-xs animate-pulse">Carregando Módulo de Login...</div>}>
+    <Suspense fallback={<div className="min-h-screen bg-slate-900 flex items-center justify-center text-white font-bold uppercase tracking-widest text-xs animate-pulse">Carregando...</div>}>
       <AdminLoginConteudo />
     </Suspense>
   )
