@@ -14,8 +14,8 @@ function AdminLoginConteudo() {
   const [verSenha, setVerSenha] = useState(false)
   const [loading, setLoading] = useState(false)
 
+  // Bypass para SuperAdmin acessando direto pelas Ligas
   useEffect(() => {
-    // Se veio do painel Super Admin, gera a credencial administrativa automática sem pedir senha
     if (isSuperAdminBypass) {
       localStorage.setItem('admin_token', 'token_superadmin_bypass')
       localStorage.setItem('token', 'token_superadmin_bypass')
@@ -31,52 +31,65 @@ function AdminLoginConteudo() {
     setLoading(true)
 
     try {
-      let url = `${API_URL}/usuarios/login`
-      if (slugLiga) {
-        url += `?liga=${slugLiga}`
+      const headers = { 
+        'Content-Type': 'application/json',
+        ...(slugLiga ? { 'X-Organization-Slug': slugLiga } : {})
       }
 
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          ...(slugLiga ? { 'X-Organization-Slug': slugLiga } : {})
-        },
-        body: JSON.stringify({ 
-          identificador, 
-          login: identificador, 
-          email: identificador, 
-          senha, 
-          liga: slugLiga 
-        })
+      const body = JSON.stringify({ 
+        identificador, 
+        login: identificador, 
+        email: identificador, 
+        senha, 
+        liga: slugLiga 
       })
+
+      // Tenta primeiro no endpoint principal da API de login
+      let res = await fetch(`${API_URL}/usuarios/login-associado${slugLiga ? `?liga=${slugLiga}` : ''}`, {
+        method: 'POST',
+        headers,
+        body
+      })
+
+      // Se o endpoint login-associado não existir ou retornar 404, tenta endpoints alternativos da API
+      if (res.status === 404) {
+        res = await fetch(`${API_URL}/auth/login${slugLiga ? `?liga=${slugLiga}` : ''}`, {
+          method: 'POST',
+          headers,
+          body
+        })
+      }
+
+      if (res.status === 404) {
+        res = await fetch(`${API_URL}/login${slugLiga ? `?liga=${slugLiga}` : ''}`, {
+          method: 'POST',
+          headers,
+          body
+        })
+      }
 
       if (res.ok) {
         const data = await res.json()
         
-        const ligaDestino = slugLiga || data.user?.liga_slug || data.user?.organizacao_slug || ''
-        const tokenRecebido = data.token || data.accessToken || 'authenticated'
+        const ligaDestino = slugLiga || data.user?.liga_slug || data.user?.organizacao_slug || 'vantago-teste'
+        const tokenRecebido = data.token || data.accessToken || 'authenticated_session'
 
-        // Salva credenciais limpas do login atual
+        // Armazena credenciais e sessão para a liga
         localStorage.setItem('token', tokenRecebido)
         localStorage.setItem('admin_token', tokenRecebido)
         localStorage.setItem('admin_user', JSON.stringify(data.user || data))
-        if (ligaDestino) {
-          localStorage.setItem('admin_liga', ligaDestino)
-        }
+        localStorage.setItem('admin_liga', ligaDestino)
 
-        const rotaFinal = ligaDestino 
-          ? `/admin/dashboard?liga=${ligaDestino}` 
-          : '/admin/dashboard'
-
+        // Redireciona diretamente para o dashboard da liga
+        const rotaFinal = `/admin/dashboard?liga=${ligaDestino}`
         router.replace(rotaFinal)
       } else {
-        const errData = await res.json()
-        alert(`❌ ${errData.message || 'Credenciais inválidas para esta liga.'}`)
+        const errData = await res.json().catch(() => ({}))
+        alert(`❌ ${errData.message || 'Credenciais inválidas. Verifique seu login e senha.'}`)
       }
     } catch (err) {
       console.error('Erro no login admin:', err)
-      alert('Erro de conexão com a API.')
+      alert('Erro de conexão ao comunicar com o servidor no Render.')
     } finally {
       setLoading(false)
     }
@@ -85,7 +98,7 @@ function AdminLoginConteudo() {
   if (isSuperAdminBypass) {
     return (
       <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white font-black uppercase text-xs tracking-widest animate-pulse">
-        Acessando como Super Admin...
+        Acessando via Super Admin...
       </div>
     )
   }
@@ -143,7 +156,7 @@ function AdminLoginConteudo() {
             disabled={loading} 
             className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black uppercase tracking-widest hover:bg-amber-500 transition-all shadow-lg disabled:opacity-50"
           >
-            {loading ? 'Entrando...' : 'Entrar no Painel'}
+            {loading ? 'Acessando...' : 'Entrar no Painel'}
           </button>
         </form>
       </div>
